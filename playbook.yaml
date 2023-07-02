@@ -193,3 +193,10 @@
         groups:
           - wheel
           - docker
+
+    - become: true
+      ansible.posix.synchronize:
+        src: ./etc
+        dest: /etc
+        recursive: true
+        archive: false
