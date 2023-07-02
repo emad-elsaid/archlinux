@@ -1,0 +1,195 @@
+- name: System setup
+  hosts: all
+  connection: local
+
+  tasks:
+
+    - community.general.timezone:
+        name: Europe/Berlin
+
+    - become: true
+      ansible.builtin.service:
+        name:  systemd-timesyncd
+        enabled: yes
+        state: started
+
+    - become: true
+      community.general.pacman:
+        state: installed
+        name:
+          - git
+          - base-devel
+
+    - name: Download yay
+      ansible.builtin.git:
+        repo: https://aur.archlinux.org/yay.git
+        single_branch: yes
+        dest: /tmp/yay
+
+    - name: Compile and install yay
+      ansible.builtin.command:
+        chdir: /tmp/yay
+        cmd: makepkg -si --noconfirm
+
+    - community.general.pacman:
+        state: installed
+        extra_args: --noconfirm
+        executable: yay
+        name:
+          # Core ==========
+          - linux
+          - linux-firmware
+          - linux-headers
+          - base
+          - bash-completion
+          - efibootmgr
+          # Networking =====
+          - dhcpcd
+          - network-manager-applet
+          - networkmanager
+          - networkmanager-openvpn
+          - nm-connection-editor
+          - pulseaudio
+          - pulseaudio-alsa
+          - pulseaudio-bluetooth
+          - traceroute
+          - ufw
+          - avahi
+          # Hardware ========
+          - acpi
+          - blueman
+          - bluez
+          - bluez-utils
+          - fwupd
+          - guvcview
+          - pavucontrol
+          - usbutils
+          - v4l2loopback-dkms
+          # Display =======
+          - xorg
+          - xorg-apps
+          - xorg-fonts
+          - xorg-xinit
+          - arandr
+          - autorandr
+          - i3
+          - picom
+          - polybar-git
+          - xbanish
+          # Services =====
+          - mate-notification-daemon
+          - syncthing
+          - xlog-git
+          - dbus
+          # CLIs =========
+          - bat
+          - cloc
+          - ctop
+          - htop
+          - dialog
+          - fzf
+          - grep
+          - gzip
+          - jq
+          - lshw
+          - lsof
+          - ncdu
+          - pv
+          - ranger
+          - rsync
+          - scrot
+          - the_silver_searcher
+          - tree
+          - unrar
+          - unzip
+          - wget
+          - whois
+          - xclip
+          - xdotool
+          - zip
+          - units
+          # Apps =========
+          - cheese
+          - eog
+          - eog-plugins
+          - gnome-disk-utility
+          - gnome-keyring
+          - nautilus
+          - konsole
+          - feh
+          - gimp
+          - inkscape
+          - hexchat
+          - mplayer
+          - obs-studio
+          - vlc
+          - google-chrome
+          - keepassxc
+          - keybase-gui
+          # Themes ========
+          - lxappearance-gtk3
+          - gtk-theme-elementary
+          - arc-gtk-theme
+          - capitaine-cursors
+          - inter-font
+          - noto-fonts
+          - noto-fonts-emoji
+          - powerline-fonts
+          - ttf-dejavu
+          - ttf-font-awesome
+          - ttf-jetbrains-mono
+          - ttf-liberation
+          - ttf-ubuntu-font-family
+          - ttf-amiri
+          - ttf-mac-fonts
+          - ttf-sil-lateef
+          # Dev tools =====
+          - android-tools
+          - make
+          - autoconf
+          - automake
+          - clang
+          - dbeaver
+          - emacs
+          - vim
+          - docker
+          - docker-compose
+          - github-cli
+          - graphviz
+          # Prog. langs ===
+          - ruby
+          - go
+          - python
+          # Utils =========
+          - aspell-en
+          - aspell-ar
+          - autoenv-git
+
+    - name: System wide services
+      become: true
+      ansible.builtin.service:
+        name:  "{{ item }}"
+        enabled: yes
+        state: started
+      loop:
+        - NetworkManager
+        - bluetooth
+        - avahi-daemon
+        - ufw
+        - dbus
+
+    # ansible.biultin.service doesn't allow --user flag
+    - name: User services
+      ansible.builtin.command:
+        cmd: "systemctl --user enable --now {{item}}"
+      loop:
+        - syncthing
+        - keybase
+
+    - become: true
+      ansible.builtin.user:
+        name: "emad"
+        state: present
+        groups:
+          - wheel
+          - docker
