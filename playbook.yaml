@@ -41,6 +41,7 @@
           - linux-firmware
           - linux-headers
           - base
+          - base-devel
           - bash-completion
           - efibootmgr
           # Networking =====
@@ -156,6 +157,7 @@
           - docker-compose
           - github-cli
           - graphviz
+          - git
           # Prog. langs ===
           - ruby
           - go
@@ -178,13 +180,25 @@
         - ufw
         - dbus
 
-    # ansible.biultin.service doesn't allow --user flag
-    - name: User services
+    - name: Copy system files
+      become: true
+      ansible.posix.synchronize:
+        src: ./root
+        dest: /
+        recursive: true
+        archive: false
+
+    - name: Install GRUB theme
+      become: true
+      lineinfile:
+        path: /etc/default/grub
+        search_string: GRUB_THEME
+        line: 'GRUB_THEME="/usr/share/grub/themes/tartarus/theme.txt"'
+
+    - name: Reconfigure GRUB
+      become: true
       ansible.builtin.command:
-        cmd: "systemctl --user enable --now {{item}}"
-      loop:
-        - syncthing
-        - keybase
+        cmd: "grub-mkconfig -o /boot/grub/grub.cfg"
 
     - become: true
       ansible.builtin.user:
@@ -194,9 +208,11 @@
           - wheel
           - docker
 
-    - become: true
-      ansible.posix.synchronize:
-        src: ./etc
-        dest: /etc
-        recursive: true
-        archive: false
+    # ansible.biultin.service doesn't allow --user flag
+    - name: User services
+      become_user: emad
+      ansible.builtin.command:
+        cmd: "systemctl --user enable --now {{item}}"
+      loop:
+        - syncthing
+        - keybase
