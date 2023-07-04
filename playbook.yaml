@@ -180,6 +180,7 @@
         - avahi-daemon
         - ufw
         - dbus
+        - docker
 
     - name: Copy system files
       become: true
