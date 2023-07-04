@@ -30,6 +30,7 @@
       ansible.builtin.command:
         chdir: /tmp/yay
         cmd: makepkg -si --noconfirm
+        creates: /usr/bin/yay
 
     - community.general.pacman:
         state: installed
@@ -183,10 +184,13 @@
     - name: Copy system files
       become: true
       ansible.posix.synchronize:
-        src: ./root
+        src: "./root/{{item}}"
         dest: /
         recursive: true
         archive: false
+      loop:
+        - etc
+        - usr
 
     - name: Install GRUB theme
       become: true
@@ -202,11 +206,22 @@
 
     - become: true
       ansible.builtin.user:
-        name: "emad"
+        name: emad
         state: present
         groups:
           - wheel
           - docker
+
+    - name: Copy user files
+      become_user: emad
+      ansible.posix.synchronize:
+        src: "./user/{{item}}"
+        dest: /home/emad
+        recursive: true
+        archive: false
+        # rsync_opts: --include=".*"
+      loop:
+        - .config
 
     # ansible.biultin.service doesn't allow --user flag
     - name: User services
@@ -214,5 +229,6 @@
       ansible.builtin.command:
         cmd: "systemctl --user enable --now {{item}}"
       loop:
+        - ssh-agent
         - syncthing
         - keybase
