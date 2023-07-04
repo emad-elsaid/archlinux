@@ -233,3 +233,9 @@
         - ssh-agent
         - syncthing
         - keybase
+
+    - become: true
+      community.general.ufw:
+        rule: allow
+        app: syncthing
+        state: enabled
