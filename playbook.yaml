@@ -200,6 +200,13 @@
         search_string: GRUB_THEME
         line: 'GRUB_THEME="/usr/share/grub/themes/tartarus/theme.txt"'
 
+    - name: Remove GRUB timeout
+      become: true
+      lineinfile:
+        path: /etc/default/grub
+        search_string: GRUB_TIMEOUT
+        line: 'GRUB_TIMEOUT=0'
+
     - name: Reconfigure GRUB
       become: true
       ansible.builtin.command:
