@@ -19,7 +19,7 @@
         cmd: localectl {{ item }}
       loop:
         - set-keymap us
-        - set-x11-keymap "us,ara" "ctrl:nocaps,caps:lctrl,ctrl:swap_lalt_lctl,grp:alt_space_toggle"
+        - set-x11-keymap "us,ara" "" "" "ctrl:nocaps,caps:lctrl,ctrl:swap_lalt_lctl,grp:alt_space_toggle"
 
 
     - become: true
