@@ -4,7 +4,7 @@ Replicate my personal machine setup using ansible playbook
 
 ## Prerequisites
 
-* install ansible, rsync `sudo pacman -S ansible, rsync`
+* install ansible, rsync `sudo pacman -S ansible rsync`
 
 
 ## Run playbook
