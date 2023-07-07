@@ -13,14 +13,13 @@
         enabled: yes
         state: started
 
-    - name: Set locale and keyboard
+    - name: Set locale and keyboard options
       become: true
       ansible.builtin.command:
         cmd: localectl {{ item }}
       loop:
         - set-keymap us
         - set-x11-keymap "us,ara" "" "" "ctrl:nocaps,caps:lctrl,ctrl:swap_lalt_lctl,grp:alt_space_toggle"
-
 
     - become: true
       community.general.pacman:
