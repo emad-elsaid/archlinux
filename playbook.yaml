@@ -176,6 +176,11 @@
           - aspell-ar
           - autoenv-git
 
+    - name: Install boot loader
+      become: true
+      ansible.builtin.command:
+        cmd: bootctl install
+
     - name: Create kernel systemd-bootd entries
       become: true
       ansible.builtin.command:
