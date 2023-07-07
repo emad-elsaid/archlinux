@@ -176,6 +176,14 @@
           - aspell-ar
           - autoenv-git
 
+    - name: Replace mkinitcpio base and udev with systemd
+      become: true
+      ansible.builtin.lineinfile:
+        path: /etc/mkinitcpio.conf
+        regexp: '^(.*)base udev(.*)$'
+        line: '\1systemd\2'
+        backrefs: yes
+
     - name: Install boot loader
       become: true
       ansible.builtin.command:
