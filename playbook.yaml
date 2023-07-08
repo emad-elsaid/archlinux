@@ -92,6 +92,7 @@
           - xlog-git
           - dbus
           # CLIs =========
+          - sudo
           - bat
           - cloc
           - ctop
@@ -217,6 +218,15 @@
         archive: false
       loop:
         - etc
+
+    - name: Allow 'wheel' group to sudo
+      become: true
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) ALL'
+        validate: 'visudo -cf %s'
 
     - become: true
       ansible.builtin.user:
