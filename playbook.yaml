@@ -176,6 +176,8 @@
           - aspell-en
           - aspell-ar
           - autoenv-git
+          # Libs =========
+          - postgresql-libs
 
     - name: Replace mkinitcpio base and udev with systemd
       become: true
