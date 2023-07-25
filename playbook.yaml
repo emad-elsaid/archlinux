@@ -54,6 +54,7 @@
           - bash-completion
           - kernel-install-mkinitcpio
           # Networking =====
+          - dnsutils
           - dhcpcd
           - network-manager-applet
           - networkmanager
