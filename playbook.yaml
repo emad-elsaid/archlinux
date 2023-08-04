@@ -264,3 +264,9 @@
         rule: allow
         app: syncthing
         state: enabled
+
+    - become: true
+      community.general.ufw:
+        rule: allow
+        port: '5901'
+        state: enabled
