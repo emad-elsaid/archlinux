@@ -53,6 +53,7 @@
           - base-devel
           - bash-completion
           - kernel-install-mkinitcpio
+          - pacman-contrib
           # Networking =====
           - dnsutils
           - dhcpcd
@@ -258,6 +259,7 @@
         - ssh-agent
         - syncthing
         - keybase
+        - checkupdates.timer
 
     - become: true
       community.general.ufw:
