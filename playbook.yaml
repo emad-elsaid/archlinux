@@ -259,6 +259,7 @@
         - ssh-agent
         - syncthing
         - keybase
+        - kbfs
         - checkupdates.timer
 
     - become: true
