@@ -178,6 +178,7 @@
           - aspell-en
           - aspell-ar
           - autoenv-git
+          - man-pages
           # Libs =========
           - postgresql-libs
 
