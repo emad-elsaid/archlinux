@@ -164,7 +164,7 @@
           - clang
           - dbeaver
           - emacs
-          - vim
+          - neovim
           - docker
           - docker-compose
           - github-cli
