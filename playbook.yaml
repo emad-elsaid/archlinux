@@ -121,6 +121,7 @@
           - xdotool
           - zip
           - units
+          - locate
           # Apps =========
           - cheese
           - eog
@@ -213,6 +214,7 @@
         - ufw
         - dbus
         - docker
+        - plocate-updatedb.timer
 
     - name: Copy system files
       become: true
