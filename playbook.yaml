@@ -140,6 +140,7 @@
           - google-chrome
           - keepassxc
           - keybase-gui
+          - rawtherapee
           # Themes ========
           - lxappearance-gtk3
           - gtk-theme-elementary
