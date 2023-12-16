@@ -122,6 +122,15 @@
           - zip
           - units
           - locate
+          # virtualization
+          # https://www.youtube.com/watch?v=wxxP39cNJOs
+          - virt-manager
+          - virt-viewer
+          - dnsmasq
+          - vde2
+          - bridge-utils
+          - openbsd-netcat
+          - libguestfs
           # Apps =========
           - cheese
           - eog
@@ -141,6 +150,7 @@
           - keepassxc
           - keybase-gui
           - rawtherapee
+          - shotwell
           # Themes ========
           - lxappearance-gtk3
           - gtk-theme-elementary
@@ -216,6 +226,7 @@
         - dbus
         - docker
         - plocate-updatedb.timer
+        - libvirtd
 
     - name: Copy system files
       become: true
@@ -243,6 +254,7 @@
         groups:
           - wheel
           - docker
+          - libvirt
 
     - name: Copy user files
       become_user: emad
@@ -277,3 +289,7 @@
         rule: allow
         port: '5901'
         state: enabled
+
+    - become: true
+      ansible.builtin.command:
+        cmd: "virsh net-autostart default"
