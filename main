@@ -1,176 +1,160 @@
 #!/usr/bin/env ruby
-def installed_packages
-  `pacman -Q --quiet --explicit --native`
-    .lines
-    .map(&:strip)
-end
+require_relative './lib'
 
-def installed_aur
-  `pacman -Q --quiet --explicit --foreign`
-    .lines
-    .map(&:strip)
-end
-
-
-def package(*names)
-  system("sudo pacman --needed -Syu #{names.join(" ")}")
-  remove = installed_packages - names
-  # system("pacman -Rs #{remove.join(" ")}")
-  puts "to remove : #{remove}"
-end
-
-def aur(*names)
-  system("yay -S #{names.join(" ")}")
-  remove = installed_aur - names
-  # system("pacman -Rs #{remove.join(" ")}")
-  puts "to remove aut: #{remove}"
-end
-
-package(
+linux do
   # Core ==========
-  'linux',
-  'linux-firmware',
-  'linux-headers',
-  'base',
-  'base-devel',
-  'bash-completion',
-  'pacman-contrib',
-  # Networking =====
-  'dnsutils',
-  'dhcpcd',
-  'network-manager-applet',
-  'networkmanager',
-  'networkmanager-openvpn',
-  'nm-connection-editor',
-  'pulseaudio',
-  'pulseaudio-alsa',
-  'pulseaudio-bluetooth',
-  'traceroute',
-  'ufw',
-  'avahi',
-  # Hardware ========
-  'acpi',
-  'blueman',
-  'bluez',
-  'bluez-utils',
-  'fwupd',
-  'guvcview',
-  'pavucontrol',
-  'usbutils',
-  'v4l2loopback-dkms',
-  # Display =======
-  'xorg',
-  'xorg-apps',
-  'xorg-fonts',
-  'xorg-xinit',
-  'arandr',
-  'autorandr',
-  'i3',
-  'picom',
-  # Services =====
-  'mate-notification-daemon',
-  'syncthing',
-  'dbus',
-  # CLIs =========
-  'sudo',
-  'bat',
-  'cloc',
-  'ctop',
-  'htop',
-  'dialog',
-  'fzf',
-  'grep',
-  'gzip',
-  'jq',
-  'lshw',
-  'lsof',
-  'ncdu',
-  'pv',
-  'ranger',
-  'rsync',
-  'scrot',
-  'the_silver_searcher',
-  'tree',
-  'unrar',
-  'unzip',
-  'wget',
-  'whois',
-  'xclip',
-  'xdotool',
-  'zip',
-  'locate',
-  # Apps =========
-  'cheese',
-  'eog',
-  'eog-plugins',
-  'gnome-disk-utility',
-  'gnome-keyring',
-  'nautilus',
-  'konsole',
-  'feh',
-  'gimp',
-  'inkscape',
-  'hexchat',
-  'mplayer',
-  'obs-studio',
-  'vlc',
-  'keepassxc',
-  'keybase-gui',
-  'rawtherapee',
-  'shotwell',
-  # Themes ========
-  'lxappearance-gtk3',
-  'gtk-theme-elementary',
-  'arc-gtk-theme',
-  'capitaine-cursors',
-  'inter-font',
-  'noto-fonts',
-  'noto-fonts-emoji',
-  'powerline-fonts',
-  'ttf-dejavu',
-  'ttf-font-awesome',
-  'ttf-jetbrains-mono',
-  'ttf-liberation',
-  'ttf-ubuntu-font-family',
-  # Dev tools =====
-  'android-tools',
-  'make',
-  'autoconf',
-  'automake',
-  'clang',
-  'dbeaver',
-  'jdk-openjdk',
-  'emacs',
-  'neovim',
-  'docker',
-  'docker-compose',
-  'github-cli',
-  'graphviz',
-  'git',
-  # Prog. langs ===
-  'ruby',
-  'go',
-  'python',
-  # Utils =========
-  'aspell-en',
-  'man-pages',
-  # Libs =========
-  'postgresql-libs',
-)
+  package 'linux',
+          'linux-firmware',
+          'linux-headers',
+          'base',
+          'base-devel',
+          'bash-completion',
+          'pacman-contrib'
 
-aur(
-  'kernel-install-mkinitcpio',
-  'polybar-git',
-  'xbanish',
-  'xlog-git',
-  'units',
-  'google-chrome',
-  'ttf-amiri',
-  'ttf-mac-fonts',
-  'ttf-sil-lateef',
-  'ttf-arabeyes-fonts',
-  'ttf-meslo',
-  'aspell-ar',
-  'autoenv-git'
-  'siji-git',
-)
+  # Networking =====
+  package 'dnsutils',
+          'dhcpcd',
+          'network-manager-applet',
+          'networkmanager',
+          'networkmanager-openvpn',
+          'nm-connection-editor',
+          'pulseaudio',
+          'pulseaudio-alsa',
+          'pulseaudio-bluetooth',
+          'traceroute',
+          'ufw',
+          'avahi'
+
+  # Hardware ========
+  package 'acpi',
+          'blueman',
+          'bluez',
+          'bluez-utils',
+          'fwupd',
+          'guvcview',
+          'pavucontrol',
+          'usbutils',
+          'v4l2loopback-dkms'
+
+  # Display =======
+  package 'xorg',
+          'xorg-apps',
+          'xorg-fonts',
+          'xorg-xinit',
+          'arandr',
+          'autorandr',
+          'i3',
+          'picom'
+
+  # Services =====
+  package 'mate-notification-daemon',
+          'syncthing',
+          'dbus'
+
+  # CLIs =========
+  package 'sudo',
+          'bat',
+          'cloc',
+          'ctop',
+          'htop',
+          'dialog',
+          'fzf',
+          'grep',
+          'gzip',
+          'jq',
+          'lshw',
+          'lsof',
+          'ncdu',
+          'pv',
+          'ranger',
+          'rsync',
+          'scrot',
+          'the_silver_searcher',
+          'tree',
+          'unrar',
+          'unzip',
+          'wget',
+          'whois',
+          'xclip',
+          'xdotool',
+          'zip',
+          'locate'
+
+  # Apps =========
+  package 'cheese',
+          'eog',
+          'eog-plugins',
+          'gnome-disk-utility',
+          'gnome-keyring',
+          'nautilus',
+          'konsole',
+          'feh',
+          'gimp',
+          'inkscape',
+          'hexchat',
+          'mplayer',
+          'obs-studio',
+          'vlc',
+          'keepassxc',
+          'keybase-gui',
+          'rawtherapee',
+          'shotwell'
+
+  # Themes ========
+  package 'lxappearance-gtk3',
+          'gtk-theme-elementary',
+          'arc-gtk-theme',
+          'capitaine-cursors',
+          'inter-font',
+          'noto-fonts',
+          'noto-fonts-emoji',
+          'powerline-fonts',
+          'ttf-dejavu',
+          'ttf-font-awesome',
+          'ttf-jetbrains-mono',
+          'ttf-liberation',
+          'ttf-ubuntu-font-family'
+
+  # Dev tools =====
+  package 'android-tools',
+          'make',
+          'autoconf',
+          'automake',
+          'clang',
+          'dbeaver',
+          'jdk-openjdk',
+          'emacs',
+          'neovim',
+          'docker',
+          'docker-compose',
+          'github-cli',
+          'graphviz',
+          'git'
+
+  # Prog. langs ===
+  package 'ruby',
+          'go',
+          'python'
+
+  # Utils =========
+  package 'aspell-en',
+          'man-pages'
+
+  # Libs =========
+  package 'postgresql-libs'
+
+  aur 'kernel-install-mkinitcpio',
+      'polybar-git',
+      'xbanish',
+      'xlog-git',
+      'units',
+      'google-chrome',
+      'ttf-amiri',
+      'ttf-mac-fonts',
+      'ttf-sil-lateef',
+      'ttf-arabeyes-fonts',
+      'ttf-meslo',
+      'aspell-ar',
+      'autoenv-git',
+      'siji-git'
+ end
