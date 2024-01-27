@@ -14,16 +14,20 @@ linux do
   # Networking =====
   package 'dnsutils',
           'dhcpcd',
+          'dhcp',
           'network-manager-applet',
           'networkmanager',
           'networkmanager-openvpn',
           'nm-connection-editor',
           'pulseaudio',
           'pulseaudio-alsa',
+          'alsa-utils',
           'pulseaudio-bluetooth',
           'traceroute',
           'ufw',
-          'avahi'
+          'avahi',
+          'iftop',
+          'nmap'
 
   # Hardware ========
   package 'acpi',
@@ -34,7 +38,10 @@ linux do
           'guvcview',
           'pavucontrol',
           'usbutils',
-          'v4l2loopback-dkms'
+          'v4l2loopback-dkms',
+          'exfat-utils',
+          'intel-ucode',
+          'system-config-printer'
 
   # Display =======
   package 'xorg',
@@ -53,9 +60,12 @@ linux do
 
   # CLIs =========
   package 'sudo',
+          'time',
           'bat',
           'cloc',
+          'calc',
           'ctop',
+          'iotop',
           'htop',
           'dialog',
           'fzf',
@@ -78,7 +88,10 @@ linux do
           'xclip',
           'xdotool',
           'zip',
-          'locate'
+          'locate',
+          'jpegoptim',
+          'nano',
+          'powertop'
 
   # Apps =========
   package 'cheese',
@@ -98,10 +111,12 @@ linux do
           'keepassxc',
           'keybase-gui',
           'rawtherapee',
-          'shotwell'
+          'shotwell',
+          'totem'
 
   # Themes ========
   package 'lxappearance-gtk3',
+          'elementary-icon-theme',
           'gtk-theme-elementary',
           'arc-gtk-theme',
           'capitaine-cursors',

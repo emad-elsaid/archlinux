@@ -45,16 +45,23 @@ class State
   end
 end
 
-def installed_packages
-  `pacman -Q --quiet --explicit --native`
-    .lines
-    .map(&:strip)
-end
-
-# install step to install packages required
+# install step to install packages required and remove not required
 Builder.install do |state|
-  names = state.packages
-  system("sudo pacman --needed -Syu #{names.join(" ")}")
+  # install packages list as is
+  names = state.packages.join(" ")
+  system("sudo pacman --needed -S #{names}") unless state.packages.empty?
+
+  # expand groups to packages
+  group_packages = `pacman --quiet -Sg #{names}`.lines.map(&:strip)
+
+  # full list of packages that should exist on the system
+  all = (state.packages + group_packages).uniq
+
+  # actual list on the system
+  installed = `pacman -Q --quiet --explicit --unrequired --native`.lines.map(&:strip)
+
+  unneeded = installed - all
+  `sudo pacman -Rs #{unneeded.join(" ")}` unless unneeded.empty?
 end
 
 # aur command to install packages from aur
@@ -62,12 +69,16 @@ class State
   attr_accessor :aurs
 
   def aur(*names)
-    self.aurs ||= []
+    self.aurs ||= ['yay']
     self.aurs += names
   end
 end
 
 Builder.install do |state|
   names = state.aurs
-  system("yay -S #{names.join(" ")}")
+  system("yay -S #{names.join(" ")}") unless names.empty?
+
+  installed = `pacman -Q --quiet --explicit --unrequired --foreign`.lines.map(&:strip)
+  unneeded = installed - names
+  `sudo pacman -Rs #{unneeded.join(" ")}` unless unneeded.empty?
 end
