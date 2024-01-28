@@ -58,6 +58,9 @@ Builder.install do |state|
   all = (state.packages + group_packages).uniq
 
   # actual list on the system
+  # TODO this list doesn't include packages that were
+  # explicitly installed AND is a dependency at the same time like `linux` which is dependency of `base`
+  # or `gimp` which is optional dependency of `alsa-lib`
   installed = `pacman -Q --quiet --explicit --unrequired --native`.lines.map(&:strip)
 
   unneeded = installed - all
