@@ -45,7 +45,8 @@ linux do
           'v4l2loopback-dkms',
           'exfat-utils',
           'intel-ucode',
-          'system-config-printer'
+          'system-config-printer',
+          'xf86-video-intel'
 
   # Display =======
   package 'xorg',
