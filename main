@@ -208,8 +208,12 @@ linux do
 
   group 'wheel', sudo: true
   user 'emad', groups: ['wheel', 'docker']
-  run 'ufw enable syncthing'
+  run 'sudo ufw enable syncthing'
 
   run 'sudo bootctl install'
   run 'sudo reinstall-kernels'
+
+  sync './root/etc', '/'
+  sync '/user/.config', '/home/emad/.config'
+  replace_line '/etc/mkinitcpio.conf', /^(.*)base udev(.*)$/, "$1systemd$2"
 end

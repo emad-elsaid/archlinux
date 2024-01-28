@@ -1,5 +1,6 @@
-# State of the system
-# It should hold all the information we need to build the system, packages, files, changes...etc
+# State of the system It should hold all the information we need to build the
+# system, packages, files, changes...etc. everything will run inside an instance
+# of this class
 class State
   def apply(block)
     instance_eval &block
@@ -23,7 +24,7 @@ class Builder
   # run will rull all steps in their registeration order passing the state to it
   def run
     @@install_steps.each do |step|
-      step.call state
+      state.apply(step)
     end
   end
 end
@@ -36,26 +37,22 @@ end
 
 
 # package command, accumulates packages needs to be installed
-class State
-  attr_accessor :packages
-
-  def package(*names)
-    self.packages ||= []
-    self.packages += names
-  end
+def package(*names)
+  @packages ||= []
+  @packages += names
 end
 
 # install step to install packages required and remove not required
-Builder.install do |state|
+Builder.install do
   # install packages list as is
-  names = state.packages.join(" ")
-  system("sudo pacman --needed -S #{names}") unless state.packages.empty?
+  names = @packages.join(" ")
+  system("sudo pacman --needed -S #{names}") unless @packages.empty?
 
   # expand groups to packages
   group_packages = `pacman --quiet -Sg #{names}`.lines.map(&:strip)
 
   # full list of packages that should exist on the system
-  all = (state.packages + group_packages).uniq
+  all = (@packages + group_packages).uniq
 
   # actual list on the system
   # TODO this list doesn't include packages that were
@@ -68,17 +65,13 @@ Builder.install do |state|
 end
 
 # aur command to install packages from aur
-class State
-  attr_accessor :aurs
-
-  def aur(*names)
-    self.aurs ||= ['yay']
-    self.aurs += names
-  end
+def aur(*names)
+  @aurs ||= ['yay']
+  @aurs += names
 end
 
-Builder.install do |state|
-  names = state.aurs
+Builder.install do
+  names = @aurs
   flags = '--norebuild --noredownload --editmenu=false --diffmenu=false --noconfirm'
   system("yay #{flags} -S #{names.join(" ")}") unless names.empty?
 
@@ -88,16 +81,55 @@ Builder.install do |state|
 end
 
 # Systemd
-class State
-  def timezone(tz)
-    @timezone = tz
-  end
-
-  def service(*names)
-    @services ||= []
-    @services += names
-  end
+def timezone(tz)
+  @timezone = tz
 end
 
-Builder.install do |state|
+def service(*names)
+  @services ||= []
+  @services += names
+end
+
+def user_service(*names)
+  @user_services ||= []
+  @user_services += names
+end
+
+def timer(*names)
+  @timers ||= []
+  @timers += names
+end
+
+def keyboard(keymap: nil, layout: nil, model: nil, variant: nil, options: nil)
+  @keyboard ||= {}
+  values = {
+    keymap: keymap,
+    layout: layout,
+    model: model,
+    variant: variant,
+    options: options
+  }.compact
+  @keyboard.merge!(values)
+end
+
+Builder.install do
+  # TODO
+end
+
+# Users and groups commands
+def user(name, groups: [])
+end
+
+def group(name, sudo: false)
+end
+
+# processes commands
+def run(command)
+end
+
+# files commands
+def sync(src, dest)
+end
+
+def replace_line(file, pattern, replacement)
 end
