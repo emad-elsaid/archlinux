@@ -1,219 +1,140 @@
 #!/usr/bin/env ruby
 
-# TODO write a script that scans current system and generate this file
-require_relative './lib'
-
-linux do
-  timezone 'Europe/Berlin'
-  keyboard keymap: 'us',
-           layout: "us,ara",
-           model: "",
-           variant: "",
-           options: "ctrl:nocaps,caps:lctrl,ctrl:swap_lalt_lctl,grp:alt_space_toggle"
-
-  # Core ==========
-  package 'linux',
-          'linux-firmware',
-          'linux-headers',
-          'base',
-          'base-devel',
-          'bash-completion',
-          'pacman-contrib'
-
-  # Networking =====
-  package 'dnsutils',
-          'dhcpcd',
-          'dhcp',
-          'network-manager-applet',
-          'networkmanager',
-          'networkmanager-openvpn',
-          'nm-connection-editor',
-          'pulseaudio',
-          'pulseaudio-alsa',
-          'alsa-utils',
-          'pulseaudio-bluetooth',
-          'traceroute',
-          'ufw',
-          'avahi',
-          'iftop',
-          'nmap'
-
-  # Hardware ========
-  package 'acpi',
-          'blueman',
-          'bluez',
-          'bluez-utils',
-          'fwupd',
-          'guvcview',
-          'pavucontrol',
-          'usbutils',
-          'v4l2loopback-dkms',
-          'exfat-utils',
-          'intel-ucode',
-          'system-config-printer'
-
-  # Display =======
-  package 'xorg',
-          'xorg-apps',
-          'xorg-fonts',
-          'xorg-xinit',
-          'arandr',
-          'autorandr',
-          'i3',
-          'picom'
-
-  # Services =====
-  package 'mate-notification-daemon',
-          'syncthing',
-          'dbus'
-
-  # CLIs =========
-  package 'sudo',
-          'time',
-          'bat',
-          'cloc',
-          'calc',
-          'ctop',
-          'iotop',
-          'htop',
-          'dialog',
-          'fzf',
-          'grep',
-          'gzip',
-          'jq',
-          'lshw',
-          'lsof',
-          'ncdu',
-          'pv',
-          'ranger',
-          'rsync',
-          'scrot',
-          'the_silver_searcher',
-          'tree',
-          'unrar',
-          'unzip',
-          'wget',
-          'whois',
-          'xclip',
-          'xdotool',
-          'zip',
-          'locate',
-          'jpegoptim',
-          'nano',
-          'powertop'
-
-  # Apps =========
-  package 'cheese',
-          'eog',
-          'eog-plugins',
-          'gnome-disk-utility',
-          'gnome-keyring',
-          'nautilus',
-          'konsole',
-          'feh',
-          'gimp',
-          'inkscape',
-          'hexchat',
-          'mplayer',
-          'obs-studio',
-          'vlc',
-          'keepassxc',
-          'keybase-gui',
-          'rawtherapee',
-          'shotwell',
-          'totem'
-
-  # Themes ========
-  package 'lxappearance-gtk3',
-          'elementary-icon-theme',
-          'gtk-theme-elementary',
-          'arc-gtk-theme',
-          'capitaine-cursors',
-          'inter-font',
-          'noto-fonts',
-          'noto-fonts-emoji',
-          'powerline-fonts',
-          'ttf-dejavu',
-          'ttf-font-awesome',
-          'ttf-jetbrains-mono',
-          'ttf-liberation',
-          'ttf-ubuntu-font-family'
-
-  # Dev tools =====
-  package 'android-tools',
-          'make',
-          'autoconf',
-          'automake',
-          'clang',
-          'dbeaver',
-          'jdk-openjdk',
-          'emacs',
-          'neovim',
-          'docker',
-          'docker-compose',
-          'github-cli',
-          'graphviz',
-          'git'
-
-  # Prog. langs ===
-  package 'ruby',
-          'go',
-          'python'
-
-  # Utils =========
-  package 'aspell-en',
-          'man-pages'
-
-  # Libs =========
-  package 'postgresql-libs'
-
-  aur 'kernel-install-mkinitcpio',
-      'polybar-git',
-      'xbanish',
-      'xlog-git',
-      'units',
-      'google-chrome',
-      'ttf-amiri',
-      'ttf-mac-fonts',
-      'ttf-sil-lateef',
-      'ttf-arabeyes-fonts',
-      'ttf-meslo',
-      'aspell-ar',
-      'autoenv-git',
-      'siji-git'
-
-  service 'avahi-daemon',
-          'bluetooth',
-          'docker',
-          'NetworkManager',
-          'systemd-boot-update',
-          'systemd-fsck-root',
-          'systemd-homed',
-          'systemd-network-generator',
-          'systemd-networkd-wait-online',
-          'systemd-networkd',
-          'systemd-pstore',
-          'systemd-remount-fs',
-          'systemd-resolved',
-          'systemd-timesyncd',
-          'ufw'
-
-  user_service 'ssh-agent',
-               'syncthing',
-               'keybase',
-               'kbfs'
-
-  timer 'plocate-updatedb',
-        'checkupdates'
-
-  group 'wheel', sudo: true
-  user 'emad', groups: ['wheel', 'docker']
-  run 'sudo ufw enable syncthing'
-
-  run 'sudo bootctl install'
-  run 'sudo reinstall-kernels'
-
-  sync './root/etc', '/'
-  sync '/user/.config', '/home/emad/.config'
-  replace_line '/etc/mkinitcpio.conf', /^(.*)base udev(.*)$/, "$1systemd$2"
+# State of the system It should hold all the information we need to build the
+# system, packages, files, changes...etc. everything will run inside an instance
+# of this class
+class State
+  def apply(block)
+    instance_eval &block
+  end
 end
+
+# Builder takes state as input and modify current system to match this state
+class Builder
+  @@install_steps = []
+
+  # Define a new installation step. the passed block will take 1 parameter of State type
+  def self.install(&block)
+    @@install_steps << block
+  end
+
+  attr_accessor :state
+  def initialize(state)
+    self.state = state
+  end
+
+  # run will rull all steps in their registeration order passing the state to it
+  def run
+    @@install_steps.each do |step|
+      state.apply(step)
+    end
+  end
+end
+
+def linux(&block)
+  s = State.new
+  s.apply(block)
+  Builder.new(s).run
+end
+
+
+# package command, accumulates packages needs to be installed
+def package(*names)
+  @packages ||= []
+  @packages += names
+end
+
+# install step to install packages required and remove not required
+Builder.install do
+  # install packages list as is
+  names = @packages.join(" ")
+  system("sudo pacman --needed -S #{names}") unless @packages.empty?
+
+  # expand groups to packages
+  group_packages = `pacman --quiet -Sg #{names}`.lines.map(&:strip)
+
+  # full list of packages that should exist on the system
+  all = (@packages + group_packages).uniq
+
+  # actual list on the system
+  # TODO this list doesn't include packages that were
+  # explicitly installed AND is a dependency at the same time like `linux` which is dependency of `base`
+  # or `gimp` which is optional dependency of `alsa-lib`
+  installed = `pacman -Q --quiet --explicit --unrequired --native`.lines.map(&:strip)
+
+  unneeded = installed - all
+  `sudo pacman -Rs #{unneeded.join(" ")}` unless unneeded.empty?
+end
+
+# aur command to install packages from aur
+def aur(*names)
+  @aurs ||= ['yay']
+  @aurs += names
+end
+
+Builder.install do
+  names = @aurs
+  flags = '--norebuild --noredownload --editmenu=false --diffmenu=false --noconfirm'
+  system("yay #{flags} -S #{names.join(" ")}") unless names.empty?
+
+  installed = `pacman -Q --quiet --explicit --unrequired --foreign`.lines.map(&:strip)
+  unneeded = installed - names
+  `sudo pacman -Rs #{unneeded.join(" ")}` unless unneeded.empty?
+end
+
+# Systemd
+def timezone(tz)
+  @timezone = tz
+end
+
+def service(*names)
+  @services ||= []
+  @services += names
+end
+
+def user_service(*names)
+  @user_services ||= []
+  @user_services += names
+end
+
+def timer(*names)
+  @timers ||= []
+  @timers += names
+end
+
+def keyboard(keymap: nil, layout: nil, model: nil, variant: nil, options: nil)
+  @keyboard ||= {}
+  values = {
+    keymap: keymap,
+    layout: layout,
+    model: model,
+    variant: variant,
+    options: options
+  }.compact
+  @keyboard.merge!(values)
+end
+
+Builder.install do
+  # TODO
+end
+
+# Users and groups commands
+def user(name, groups: [])
+end
+
+def group(name, sudo: false)
+end
+
+# processes commands
+def run(command)
+end
+
+# files commands
+def sync(src, dest)
+end
+
+def replace_line(file, pattern, replacement)
+end
+
+# execute passed file
+require_relative ARGV.first
