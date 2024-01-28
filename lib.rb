@@ -79,9 +79,25 @@ end
 
 Builder.install do |state|
   names = state.aurs
-  system("yay -S #{names.join(" ")}") unless names.empty?
+  flags = '--norebuild --noredownload --editmenu=false --diffmenu=false --noconfirm'
+  system("yay #{flags} -S #{names.join(" ")}") unless names.empty?
 
   installed = `pacman -Q --quiet --explicit --unrequired --foreign`.lines.map(&:strip)
   unneeded = installed - names
   `sudo pacman -Rs #{unneeded.join(" ")}` unless unneeded.empty?
+end
+
+# Systemd
+class State
+  def timezone(tz)
+    @timezone = tz
+  end
+
+  def service(*names)
+    @services ||= []
+    @services += names
+  end
+end
+
+Builder.install do |state|
 end
