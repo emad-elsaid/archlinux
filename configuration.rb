@@ -1,5 +1,9 @@
+require_relative 'lib'
+
 linux do
-  timezone 'Europe/Berlin'
+  timedate timezone: 'Europe/Berlin',
+           ntp: true
+
   keyboard keymap: 'us',
            layout: "us,ara",
            model: "",

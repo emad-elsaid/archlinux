@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 # State of the system It should hold all the information we need to build the
 # system, packages, files, changes...etc. everything will run inside an instance
 # of this class
@@ -48,7 +46,7 @@ end
 Builder.install do
   # install packages list as is
   names = @packages.join(" ")
-  system("sudo pacman --needed -S #{names}") unless @packages.empty?
+  system("pacman --needed -S #{names}") unless @packages.empty?
 
   # expand groups to packages
   group_packages = `pacman --quiet -Sg #{names}`.lines.map(&:strip)
@@ -63,7 +61,8 @@ Builder.install do
   installed = `pacman -Q --quiet --explicit --unrequired --native`.lines.map(&:strip)
 
   unneeded = installed - all
-  `sudo pacman -Rs #{unneeded.join(" ")}` unless unneeded.empty?
+  puts "Removing packages: #{unneeded}"
+  system("pacman -Rs #{unneeded.join(" ")}") unless unneeded.empty?
 end
 
 # aur command to install packages from aur
@@ -73,18 +72,25 @@ def aur(*names)
 end
 
 Builder.install do
-  names = @aurs
+  names = @aurs || []
   flags = '--norebuild --noredownload --editmenu=false --diffmenu=false --noconfirm'
   system("yay #{flags} -S #{names.join(" ")}") unless names.empty?
 
   installed = `pacman -Q --quiet --explicit --unrequired --foreign`.lines.map(&:strip)
   unneeded = installed - names
-  `sudo pacman -Rs #{unneeded.join(" ")}` unless unneeded.empty?
+  puts "Removing packages: #{unneeded}"
+  system("pacman -Rs #{unneeded.join(" ")}") unless unneeded.empty?
 end
 
 # Systemd
-def timezone(tz)
-  @timezone = tz
+
+def timedate(timezone: 'UTC', ntp: true)
+  @timedate = {timezone: timezone, ntp: ntp}
+end
+
+Builder.install do
+  system("timedatectl set-timezone #{@timedate[:timezone]}")
+  system("timedatectl set-ntp #{@timedate[:ntp]}")
 end
 
 def service(*names)
@@ -92,14 +98,30 @@ def service(*names)
   @services += names
 end
 
+Builder.install do
+  system("systemctl enable --now #{@services.join(" ")}")
+  # disable all other services
+end
+
 def user_service(*names)
   @user_services ||= []
   @user_services += names
 end
 
+Builder.install do
+  # system("systemctl enable --user --now #{@services.join(" ")}")
+  # disable all other user services
+end
+
 def timer(*names)
   @timers ||= []
   @timers += names
+end
+
+Builder.install do
+  # timers = @timers.map{ |t| "#{t}.timer" }.join(" ")
+  # system("systemctl enable #{timers}")
+  # diable all other timers
 end
 
 def keyboard(keymap: nil, layout: nil, model: nil, variant: nil, options: nil)
@@ -115,7 +137,6 @@ def keyboard(keymap: nil, layout: nil, model: nil, variant: nil, options: nil)
 end
 
 Builder.install do
-  # TODO
 end
 
 # Users and groups commands
@@ -135,6 +156,3 @@ end
 
 def replace_line(file, pattern, replacement)
 end
-
-# execute passed file
-require_relative ARGV.first
