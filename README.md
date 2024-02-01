@@ -1,5 +1,7 @@
 # Archlinux
 
+WARNING: this can break your system, don't use it on your running system
+
 a way to replicate my installation between multiple machines
 
 * This project is early alpha

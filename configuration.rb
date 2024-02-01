@@ -186,16 +186,6 @@ linux do
           'bluetooth',
           'docker',
           'NetworkManager',
-          'systemd-boot-update',
-          'systemd-fsck-root',
-          'systemd-homed',
-          'systemd-network-generator',
-          'systemd-networkd-wait-online',
-          'systemd-networkd',
-          'systemd-pstore',
-          'systemd-remount-fs',
-          'systemd-resolved',
-          'systemd-timesyncd',
           'ufw'
 
   user_service 'ssh-agent',
