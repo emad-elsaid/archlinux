@@ -32,7 +32,6 @@ linux do
           'alsa-utils',
           'pulseaudio-bluetooth',
           'traceroute',
-          'ufw',
           'avahi',
           'iftop',
           'nmap'
@@ -185,8 +184,7 @@ linux do
   service 'avahi-daemon',
           'bluetooth',
           'docker',
-          'NetworkManager',
-          'ufw'
+          'NetworkManager'
 
   user_service 'ssh-agent',
                'syncthing',
@@ -196,9 +194,9 @@ linux do
   timer 'plocate-updatedb',
         'checkupdates'
 
-  group 'wheel', sudo: true
   user 'emad', groups: ['wheel', 'docker']
-  run 'sudo ufw enable syncthing'
+
+  firewall :syncthing
 
   run 'sudo bootctl install'
   run 'sudo reinstall-kernels'
@@ -206,5 +204,4 @@ linux do
   sync './root/etc', '/'
   sync '/user/.config', '/home/emad/.config'
   replace_line '/etc/mkinitcpio.conf', /^(.*)base udev(.*)$/, "$1systemd$2"
-
 end

@@ -1,3 +1,5 @@
+require 'fileutils'
+
 # Supporting functions
 def log(msg, args={})
   puts msg
@@ -162,7 +164,7 @@ def keyboard(keymap: nil, layout: nil, model: nil, variant: nil, options: nil)
 end
 
 Builder.install do
-  sudo "localectl set-keymap #{@keyboard[keymap]}" if keyboard[:keymap]
+  sudo "localectl set-keymap #{@keyboard[:keymap]}" if keyboard[:keymap]
 
   m = @keyboard.to_h.slice(:layout, :model, :variant, :options)
   sudo "localectl set-x11-keymap \"#{m[:layout]}\" \"#{m[:model]}\" \"#{m[:variant]}\" \"#{m[:options]}\""
@@ -191,4 +193,19 @@ end
 
 # Replace a pattern with replacement string in a file
 def replace_line(file, pattern, replacement)
+end
+
+# firewall
+def firewall(*allow)
+  @firewall ||= []
+  @firewall += allow
+
+  package :ufw
+  service :ufw
+end
+
+Builder.install do
+  if @firewall
+    sudo "ufw allow #{@firewall.join(' ')}"
+  end
 end
