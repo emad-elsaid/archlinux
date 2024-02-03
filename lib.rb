@@ -1,6 +1,10 @@
 require 'fileutils'
 
-# Supporting functions
+# ==============================================================
+# UTILITIES:
+# functions for logging, tracing, error reporting, coloring text
+# ==============================================================
+
 def log(msg, args={})
   puts msg
   max = args.keys.map(&:to_s).max_by(&:length).length
@@ -20,9 +24,12 @@ def sudo(command)
 end
 
 
+# ==============================================================
+# CORE:
 # State of the system It should hold all the information we need to build the
 # system, packages, files, changes...etc. everything will run inside an instance
 # of this class
+# ==============================================================
 class State
   def apply(block)
     instance_eval &block
@@ -57,6 +64,12 @@ def linux(&block)
   Builder.new(s).run
 end
 
+
+# ==============================================================
+# DECLARATIONS:
+# Functions the user will run to declare the state of the system
+# like packages to be present, files, services, user, group...etc
+# ==============================================================
 
 # package command, accumulates packages needs to be installed
 def package(*names)
