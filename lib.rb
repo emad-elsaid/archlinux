@@ -192,6 +192,7 @@ end
 def user(name, groups: [])
 end
 
+# create a group and allow/disallow it to sudo
 def group(name, sudo: false)
 end
 
