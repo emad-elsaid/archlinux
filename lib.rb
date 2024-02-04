@@ -79,7 +79,7 @@ end
 # package command, accumulates packages needs to be installed
 def package(*names)
   @packages ||= Set.new
-  @packages += names
+  @packages += names.map(&:to_s)
 end
 
 # install step to install packages required and remove not required
@@ -90,26 +90,26 @@ on_install do
   sudo "pacman --needed -S #{names}" unless @packages.empty?
 
   # expand groups to packages
-  # group_packages = `pacman --quiet -Sg #{names}`.lines.map(&:strip)
+  group_packages = Set.new(`pacman --quiet -Sg #{names}`.lines.map(&:strip))
 
   # full list of packages that should exist on the system
-  # all = (@packages + group_packages).uniq
+  all = @packages + group_packages
 
   # actual list on the system
   # TODO this list doesn't include packages that were
   # explicitly installed AND is a dependency at the same time like `linux` which is dependency of `base`
   # or `gimp` which is optional dependency of `alsa-lib`
-  # installed = `pacman -Q --quiet --explicit --unrequired --native`.lines.map(&:strip)
+  installed = Set.new(`pacman -Q --quiet --explicit --unrequired --native`.lines.map(&:strip))
 
-  # unneeded = installed - all
-  # puts "Removing packages: #{unneeded}"
-  # sudo("pacman -Rs #{unneeded.join(" ")}") unless unneeded.empty?
+  unneeded = installed - all
+  log "Removing packages", packages: unneeded
+  sudo("pacman -Rs #{unneeded.join(" ")}") unless unneeded.empty?
 end
 
 # aur command to install packages from aur
 def aur(*names)
   @aurs ||= Set.new
-  @aurs += names
+  @aurs += names.map(&:to_s)
 end
 
 on_install do

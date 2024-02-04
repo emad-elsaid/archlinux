@@ -20,8 +20,7 @@ linux do
           'pacman-contrib'
 
   # Networking =====
-  package 'dnsutils',
-          'dhcpcd',
+  package 'dhcpcd',
           'dhcp',
           'network-manager-applet',
           'networkmanager',
