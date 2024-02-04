@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'set'
 
 # ==============================================================
 # UTILITIES:
@@ -10,7 +11,7 @@ def log(msg, args={})
   max = args.keys.map(&:to_s).max_by(&:length).length
   args.each do |k, v|
     vs = case v
-         when Array
+         when Array, Set
            "(#{v.length}) " + v.join(", ")
          else
            v
@@ -41,7 +42,7 @@ class Builder
   @@install_steps = []
 
   # Define a new installation step. the passed block will take 1 parameter of State type
-  def self.install(&block)
+  def self.on_install(&block)
     @@install_steps << block
   end
 
@@ -56,6 +57,10 @@ class Builder
       state.apply(step)
     end
   end
+end
+
+def on_install(&block)
+  Builder.on_install(&block)
 end
 
 def linux(&block)
@@ -73,12 +78,12 @@ end
 
 # package command, accumulates packages needs to be installed
 def package(*names)
-  @packages ||= []
+  @packages ||= Set.new
   @packages += names
 end
 
 # install step to install packages required and remove not required
-Builder.install do
+on_install do
   # install packages list as is
   names = @packages.join(" ")
   log "Installing packages", packages: @packages
@@ -103,11 +108,11 @@ end
 
 # aur command to install packages from aur
 def aur(*names)
-  @aurs ||= []
+  @aurs ||= Set.new
   @aurs += names
 end
 
-Builder.install do
+on_install do
   names = @aurs || []
   log "Install AUR packages", packages: names
   cache = "./cache/aur"
@@ -126,41 +131,41 @@ def timedate(timezone: 'UTC', ntp: true)
   @timedate = {timezone: timezone, ntp: ntp}
 end
 
-Builder.install do
+on_install do
   log "Set timedate", timedate
   sudo "timedatectl set-timezone #{@timedate[:timezone]}"
   sudo "timedatectl set-ntp #{@timedate[:ntp]}"
 end
 
 def service(*names)
-  @services ||= []
+  @services ||= Set.new
   @services += names
 end
 
-Builder.install do
+on_install do
   log "Enable services", services: @services
   sudo "systemctl enable --now #{@services.join(" ")}"
   # disable all other services
 end
 
 def user_service(*names)
-  @user_services ||= []
+  @user_services ||= Set.new
   @user_services += names
 end
 
-Builder.install do
-  system("systemctl enable --user --now #{@services.join(" ")}")
+on_install do
+  system "systemctl enable --user --now #{@services.join(" ")}"
   # disable all other user services
 end
 
 def timer(*names)
-  @timers ||= []
+  @timers ||= Set.new
   @timers += names
 end
 
-Builder.install do
+on_install do
   timers = @timers.map{ |t| "#{t}.timer" }.join(" ")
-  system("systemctl enable #{timers}")
+  sudo "systemctl enable #{timers}"
   # disable all other timers
 end
 
@@ -176,7 +181,7 @@ def keyboard(keymap: nil, layout: nil, model: nil, variant: nil, options: nil)
   @keyboard.merge!(values)
 end
 
-Builder.install do
+on_install do
   sudo "localectl set-keymap #{@keyboard[:keymap]}" if keyboard[:keymap]
 
   m = @keyboard.to_h.slice(:layout, :model, :variant, :options)
@@ -192,11 +197,11 @@ end
 
 # processes commands
 def run(command)
-  @run ||= []
+  @run ||= Set.new
   @run << command
 end
 
-Builder.install do
+on_install do
   @run.each { |cmd| system(cmd) }
 end
 
@@ -210,15 +215,14 @@ end
 
 # firewall
 def firewall(*allow)
-  @firewall ||= []
+  @firewall ||= Set.new
   @firewall += allow
 
   package :ufw
   service :ufw
 end
 
-Builder.install do
-  if @firewall
-    sudo "ufw allow #{@firewall.join(' ')}"
-  end
+on_install do
+  next unless @firewall
+  sudo "ufw allow #{@firewall.join(' ')}"
 end
