@@ -219,7 +219,7 @@ end
 def replace_line(file, pattern, replacement)
 end
 
-# firewall
+# setup add ufw enable it and allow ports
 def firewall(*allow)
   @firewall ||= Set.new
   @firewall += allow
