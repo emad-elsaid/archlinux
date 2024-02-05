@@ -59,11 +59,17 @@ class Builder
   end
 end
 
+# Adds a step to installation steps, ID identifies the step to make sure same
+# step is not executed twice, in case the ID is nil the caller location will be
+# used the ID, meaning the place where on_install is called from if ran twice
+# it'll be added once
 def on_install(id=nil, &block)
   id ||=  caller_locations(1,1).first.to_s
   Builder.on_install(id, &block)
 end
 
+# passed block will run in the context of a State instance and then a builder
+# will build this state
 def linux(&block)
   s = State.new
   s.apply(block)
