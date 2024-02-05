@@ -35,37 +35,23 @@ class State
   def apply(block)
     instance_eval &block
   end
-end
 
-# Builder takes state as input and modify current system to match this state
-class Builder
-  @@install_steps = {}
-
-  # Define a new installation step. the passed block will take 1 parameter of State type
-  def self.on_install(id, &block)
-    @@install_steps[id] = block
+  # Adds a step to installation steps, ID identifies the step to make sure same
+  # step is not executed twice, in case the ID is nil the caller location will be
+  # used the ID, meaning the place where on_install is called from if ran twice
+  # it'll be added once
+  def on_install(id=nil, &block)
+    id ||=  caller_locations(1,1).first.to_s
+    @install_steps ||= {}
+    @install_steps[id] = block
   end
 
-  attr_accessor :state
-  def initialize(state)
-    self.state = state
-  end
-
-  # run will rull all steps in their registeration order passing the state to it
-  def run
-    @@install_steps.each do |_, step|
-      state.apply(step)
+  # run will rull all steps in their registeration order
+  def run_steps
+    @install_steps.each do |_, step|
+      apply(step)
     end
   end
-end
-
-# Adds a step to installation steps, ID identifies the step to make sure same
-# step is not executed twice, in case the ID is nil the caller location will be
-# used the ID, meaning the place where on_install is called from if ran twice
-# it'll be added once
-def on_install(id=nil, &block)
-  id ||=  caller_locations(1,1).first.to_s
-  Builder.on_install(id, &block)
 end
 
 # passed block will run in the context of a State instance and then a builder
@@ -73,7 +59,7 @@ end
 def linux(&block)
   s = State.new
   s.apply(block)
-  Builder.new(s).run
+  s.run_steps
 end
 
 
@@ -213,8 +199,20 @@ def run(command)
   end
 end
 
-# Sync src directory with destination directory
-def sync(src, dest)
+# Copy src inside dest during install step, if src/. will copy src content to dest
+def copy(src, dest)
+  @copy ||= []
+  @copy << { src: src, dest: dest }
+
+  on_install do
+    next unless @copy
+    next if @copy.empty?
+
+    @copy.each do |item|
+      log "Copying", item
+      FileUtils.cp_r item[:src], item[:dest]
+    end
+  end
 end
 
 # Replace a pattern with replacement string in a file

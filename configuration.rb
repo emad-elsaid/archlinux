@@ -200,7 +200,7 @@ linux do
   run 'sudo bootctl install'
   run 'sudo reinstall-kernels'
 
-  sync './root/etc', '/'
-  sync '/user/.config', '/home/emad/.config'
+  copy './root/etc', '/'
+  copy '/user/.config/.', '/home/emad/.config'
   replace_line '/etc/mkinitcpio.conf', /^(.*)base udev(.*)$/, "$1systemd$2"
 end
