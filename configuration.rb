@@ -165,35 +165,35 @@ linux do
   # Libs =========
   package 'postgresql-libs'
 
-  aur 'kernel-install-mkinitcpio',
-      'polybar-git',
-      'xbanish',
-      'xlog-git',
-      'units',
-      'google-chrome',
-      'ttf-amiri',
-      'ttf-mac-fonts',
-      'ttf-sil-lateef',
-      'ttf-arabeyes-fonts',
-      'ttf-meslo',
-      'aspell-ar',
-      'autoenv-git',
-      'siji-git'
-
   service 'avahi-daemon',
           'bluetooth',
           'docker',
           'NetworkManager'
 
-  user_service 'ssh-agent',
-               'syncthing',
-               'keybase',
-               'kbfs'
+  user 'emad', groups: ['wheel', 'docker'] do
+    aur 'kernel-install-mkinitcpio',
+        'polybar-git',
+        'xbanish',
+        'xlog-git',
+        'units',
+        'google-chrome',
+        'ttf-amiri',
+        'ttf-mac-fonts',
+        'ttf-sil-lateef',
+        'ttf-arabeyes-fonts',
+        'ttf-meslo',
+        'aspell-ar',
+        'autoenv-git',
+        'siji-git'
 
-  timer 'plocate-updatedb',
-        'checkupdates'
-
-  user 'emad', groups: ['wheel', 'docker']
+    service 'ssh-agent',
+            'syncthing',
+            'keybase',
+            'kbfs'
+    copy './user/.config/.', '/home/emad/.config'
+    timer 'plocate-updatedb',
+          'checkupdates'
+  end
 
   firewall :syncthing
 
@@ -201,6 +201,5 @@ linux do
   run 'sudo reinstall-kernels'
 
   copy './root/etc', '/'
-  copy '/user/.config/.', '/home/emad/.config'
   replace_line '/etc/mkinitcpio.conf', /^(.*)base udev(.*)$/, "$1systemd$2"
 end

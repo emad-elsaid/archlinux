@@ -1,5 +1,6 @@
 require 'fileutils'
 require 'set'
+require 'etc'
 
 # ==============================================================
 # UTILITIES:
@@ -20,10 +21,13 @@ def log(msg, args={})
   end
 end
 
-def sudo(command)
-  system("sudo #{command}")
+def root?
+  Process.uid == Etc.getpwnam('root').uid
 end
 
+def sudo(command)
+  root? ? system(command) : system("sudo #{command}")
+end
 
 # ==============================================================
 # CORE:
@@ -134,18 +138,12 @@ def service(*names)
 
   on_install do
     log "Enable services", services: @services
-    sudo "systemctl enable --now #{@services.join(" ")}"
+    if root?
+      system "systemctl enable #{@services.join(" ")}"
+    else
+      system "systemctl enable --user --now #{@services.join(" ")}"
+    end
     # disable all other services
-  end
-end
-
-def user_service(*names)
-  @user_services ||= Set.new
-  @user_services += names
-
-  on_install do
-    system "systemctl enable --user --now #{@services.join(" ")}"
-    # disable all other user services
   end
 end
 
@@ -155,7 +153,11 @@ def timer(*names)
 
   on_install do
     timers = @timers.map{ |t| "#{t}.timer" }.join(" ")
-    sudo "systemctl enable #{timers}"
+    if root?
+      sudo "systemctl enable #{timers}"
+    else
+      system "systemctl enable --user #{timers}"
+    end
     # disable all other timers
   end
 end
@@ -182,11 +184,32 @@ def keyboard(keymap: nil, layout: nil, model: nil, variant: nil, options: nil)
 end
 
 # Users and groups commands
-def user(name, groups: [])
-end
+def user(name, groups: [], &block)
+  @user ||= {}
+  @user[name] ||= {}
+  @user[name][:groups] ||= []
+  @user[name][:groups] += groups
+  @user[name][:state] = State.new
+  @user[name][:state].apply(block) if block_given?
 
-# create a group and allow/disallow it to sudo
-def group(name, sudo: false)
+  on_install do
+    @user.each do |name, conf|
+      if groups.empty?
+        sudo "useradd --groups #{groups.join(",")} #{name}"
+      else
+        sudo "useradd #{name}"
+      end
+
+      fork do
+        currentuser = Etc.getpwnam(name)
+        Process::GID.change_privilege(currentuser.gid)
+        Process::UID.change_privilege(currentuser.uid)
+        ENV['XDG_RUNTIME_DIR'] = "/run/user/#{currentuser.uid}"
+        conf[:state].run_steps
+      end
+      Process.wait
+    end
+  end
 end
 
 # processes commands
