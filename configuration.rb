@@ -201,5 +201,5 @@ linux do
   run 'sudo reinstall-kernels'
 
   copy './root/etc', '/'
-  replace_line '/etc/mkinitcpio.conf', /^(.*)base udev(.*)$/, "$1systemd$2"
+  replace '/etc/mkinitcpio.conf', /^(.*)base udev(.*)$/, '\1systemd\2'
 end

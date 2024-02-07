@@ -238,8 +238,11 @@ def copy(src, dest)
   end
 end
 
-# Replace a pattern with replacement string in a file
-def replace_line(file, pattern, replacement)
+# Replace a regex pattern with replacement string in a file
+def replace(file, pattern, replacement)
+  input = File.read(file)
+  output = input.gsub(pattern, replacement)
+  File.write(file, output)
 end
 
 # setup add ufw enable it and allow ports
