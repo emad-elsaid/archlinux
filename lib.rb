@@ -2,6 +2,8 @@ require 'fileutils'
 require 'set'
 require 'etc'
 
+Signal.trap("INT") { exit } # Suppress stack trace on Ctrl-C
+
 # ==============================================================
 # UTILITIES:
 # functions for logging, tracing, error reporting, coloring text
@@ -75,6 +77,7 @@ end
 
 # package command, accumulates packages needs to be installed
 def package(*names)
+  names.flatten!
   @packages ||= Set.new
   @packages += names.map(&:to_s)
 
@@ -83,7 +86,7 @@ def package(*names)
     # install packages list as is
     names = @packages.join(" ")
     log "Installing packages", packages: @packages
-    sudo "pacman --needed -S #{names}" unless @packages.empty?
+    sudo "pacman --noconfirm --needed -S #{names}" unless @packages.empty?
 
     # expand groups to packages
     group_packages = Set.new(`pacman --quiet -Sg #{names}`.lines.map(&:strip))
@@ -95,14 +98,17 @@ def package(*names)
     installed = Set.new(`pacman -Q --quiet --explicit --unrequired --native`.lines.map(&:strip))
 
     unneeded = installed - all
+    next if unneeded.empty?
+
     log "Removing packages", packages: unneeded
-    sudo("pacman -Rs #{unneeded.join(" ")}") unless unneeded.empty?
+    sudo("pacman -Rs #{unneeded.join(" ")}")
   end
 
 end
 
 # aur command to install packages from aur
 def aur(*names)
+  names.flatten!
   @aurs ||= Set.new
   @aurs += names.map(&:to_s)
 
@@ -113,7 +119,7 @@ def aur(*names)
     FileUtils.mkdir_p cache
     Dir.chdir cache do
       names.each do |package|
-        system("git clone --depth 1 --shallow-submodules https://aur.archlinux.org/#{package}.git")
+        system("git clone --depth 1 --shallow-submodules https://aur.archlinux.org/#{package}.git") unless Dir.exists?(package)
         Dir.chdir package do
           system("makepkg --syncdeps --install --noconfirm --needed")
         end
@@ -126,13 +132,14 @@ def timedate(timezone: 'UTC', ntp: true)
   @timedate = {timezone: timezone, ntp: ntp}
 
   on_install do
-    log "Set timedate", timedate: @timedate
+    log "Set timedate", @timedate
     sudo "timedatectl set-timezone #{@timedate[:timezone]}"
     sudo "timedatectl set-ntp #{@timedate[:ntp]}"
   end
 end
 
 def service(*names)
+  names.flatten!
   @services ||= Set.new
   @services += names
 
@@ -148,10 +155,12 @@ def service(*names)
 end
 
 def timer(*names)
+  names.flatten!
   @timers ||= Set.new
   @timers += names
 
   on_install do
+    log "Enable timers", timers: @timers
     timers = @timers.map{ |t| "#{t}.timer" }.join(" ")
     if root?
       sudo "systemctl enable #{timers}"
