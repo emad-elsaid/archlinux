@@ -11,6 +11,9 @@ Signal.trap("INT") { exit } # Suppress stack trace on Ctrl-C
 
 def log(msg, args={})
   puts msg
+
+  return unless args.any?
+
   max = args.keys.map(&:to_s).max_by(&:length).length
   args.each do |k, v|
     vs = case v
@@ -42,20 +45,56 @@ class State
     instance_eval &block
   end
 
-  # Adds a step to installation steps, ID identifies the step to make sure same
-  # step is not executed twice, in case the ID is nil the caller location will be
-  # used the ID, meaning the place where on_install is called from if ran twice
-  # it'll be added once
+  # Run block on prepare step. id identifies the block uniqueness in the steps.
+  # registering a block with same id multiple times replaces old block by new
+  # one. if id is nil the block location in source code is used as an id
+  def on_prepare(id=nil, &block)
+    id ||=  caller_locations(1,1).first.to_s
+    @prepare_steps ||= {}
+    @prepare_steps[id] = block
+  end
+
+  # Same as on_prepare but for install step
   def on_install(id=nil, &block)
     id ||=  caller_locations(1,1).first.to_s
     @install_steps ||= {}
     @install_steps[id] = block
   end
 
-  # run will rull all steps in their registeration order
+  # Same as on_prepare but for configure step
+  def on_configure(id=nil, &block)
+    id ||=  caller_locations(1,1).first.to_s
+    @configure_steps ||= {}
+    @configure_steps[id] = block
+  end
+
+  # Same as on_finalize but for configure step
+  def on_finalize(id=nil, &block)
+    id ||=  caller_locations(1,1).first.to_s
+    @finalize_steps ||= {}
+    @finalize_steps[id] = block
+  end
+
+  # Run all registered code blocks in the following order: Prepare, Install, Configure, Finalize
   def run_steps
-    @install_steps.each do |_, step|
-      apply(step)
+    if @prepare_steps&.any?
+      log "=> Prepare"
+      @prepare_steps.each { |_, step| apply(step) }
+    end
+
+    if @install_steps&.any?
+      log "=> Install"
+      @install_steps.each { |_, step| apply(step) }
+    end
+
+    if @configure_steps&.any?
+      log "=> Configure"
+      @configure_steps.each { |_, step| apply(step) }
+    end
+
+    if @finalize_steps&.any?
+      log "=> Finalize"
+      @finalize_steps.each { |_, step| apply(step) }
     end
   end
 end
@@ -75,7 +114,8 @@ end
 # like packages to be present, files, services, user, group...etc
 # ==============================================================
 
-# package command, accumulates packages needs to be installed
+# Install a package on install step and remove packages not registered with this
+# function
 def package(*names)
   names.flatten!
   @packages ||= Set.new
@@ -106,7 +146,7 @@ def package(*names)
 
 end
 
-# aur command to install packages from aur
+# aur command to install packages from aur on install step
 def aur(*names)
   names.flatten!
   @aurs ||= Set.new
@@ -128,22 +168,24 @@ def aur(*names)
   end
 end
 
+# set timezone and NTP settings during prepare step
 def timedate(timezone: 'UTC', ntp: true)
   @timedate = {timezone: timezone, ntp: ntp}
 
-  on_install do
+  on_configure do
     log "Set timedate", @timedate
     sudo "timedatectl set-timezone #{@timedate[:timezone]}"
     sudo "timedatectl set-ntp #{@timedate[:ntp]}"
   end
 end
 
+# enable system service if root or user service if not during finalize step
 def service(*names)
   names.flatten!
   @services ||= Set.new
   @services += names
 
-  on_install do
+  on_finalize do
     log "Enable services", services: @services
     if root?
       system "systemctl enable #{@services.join(" ")}"
@@ -154,12 +196,13 @@ def service(*names)
   end
 end
 
+# enable system timer if root or user timer if not during finalize step
 def timer(*names)
   names.flatten!
   @timers ||= Set.new
   @timers += names
 
-  on_install do
+  on_finalize do
     log "Enable timers", timers: @timers
     timers = @timers.map{ |t| "#{t}.timer" }.join(" ")
     if root?
@@ -171,6 +214,7 @@ def timer(*names)
   end
 end
 
+# set keyboard settings during prepare step
 def keyboard(keymap: nil, layout: nil, model: nil, variant: nil, options: nil)
   @keyboard ||= {}
   values = {
@@ -182,7 +226,7 @@ def keyboard(keymap: nil, layout: nil, model: nil, variant: nil, options: nil)
   }.compact
   @keyboard.merge!(values)
 
-  on_install do
+  on_prepare do
     next unless @keyboard[:keymap]
 
     sudo "localectl set-keymap #{@keyboard[:keymap]}"
@@ -192,7 +236,8 @@ def keyboard(keymap: nil, layout: nil, model: nil, variant: nil, options: nil)
   end
 end
 
-# Users and groups commands
+# create a user and assign a set of group. if block is passes the block will run
+# in as this user. block will run during the configure step
 def user(name, groups: [], &block)
   @user ||= {}
   @user[name] ||= {}
@@ -201,7 +246,7 @@ def user(name, groups: [], &block)
   @user[name][:state] = State.new
   @user[name][:state].apply(block) if block_given?
 
-  on_install do
+  on_configure do
     @user.each do |name, conf|
       if groups.empty?
         sudo "useradd --groups #{groups.join(",")} #{name}"
@@ -221,22 +266,12 @@ def user(name, groups: [], &block)
   end
 end
 
-# processes commands
-def run(command)
-  @run ||= Set.new
-  @run << command
-
-  on_install do
-    @run.each { |cmd| system(cmd) }
-  end
-end
-
-# Copy src inside dest during install step, if src/. will copy src content to dest
+# Copy src inside dest during configure step, if src/. will copy src content to dest
 def copy(src, dest)
   @copy ||= []
   @copy << { src: src, dest: dest }
 
-  on_install do
+  on_configure do
     next unless @copy
     next if @copy.empty?
 
@@ -247,14 +282,21 @@ def copy(src, dest)
   end
 end
 
-# Replace a regex pattern with replacement string in a file
+# Replace a regex pattern with replacement string in a file during configure step
 def replace(file, pattern, replacement)
-  input = File.read(file)
-  output = input.gsub(pattern, replacement)
-  File.write(file, output)
+  @replace ||= []
+  @replace << {file: file, pattern: pattern, replacement: replacement}
+
+  on_configure do
+    @replace.each do |params|
+      input = File.read(params[:file])
+      output = input.gsub(params[:pattern], params[:replacement])
+      File.write(params[:file], output)
+    end
+  end
 end
 
-# setup add ufw enable it and allow ports
+# setup add ufw enable it and allow ports during configure step
 def firewall(*allow)
   @firewall ||= Set.new
   @firewall += allow
@@ -262,7 +304,7 @@ def firewall(*allow)
   package :ufw
   service :ufw
 
-  on_install do
+  on_configure do
     next unless @firewall
     sudo "ufw allow #{@firewall.join(' ')}"
   end

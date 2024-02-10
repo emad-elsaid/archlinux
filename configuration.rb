@@ -220,8 +220,10 @@ linux do
 
   firewall :syncthing
 
-  run 'sudo bootctl install'
-  run 'sudo reinstall-kernels'
+  on_finalize do
+    sudo 'bootctl install'
+    sudo 'reinstall-kernels'
+  end
 
   copy './root/etc', '/'
   replace '/etc/mkinitcpio.conf', /^(.*)base udev(.*)$/, '\1systemd\2'
