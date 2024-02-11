@@ -1,6 +1,8 @@
 require_relative 'lib'
 
 linux do
+  hostname 'earth'
+
   timedate timezone: 'Europe/Berlin',
            ntp: true
 

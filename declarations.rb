@@ -140,6 +140,8 @@ end
 # create a user and assign a set of group. if block is passes the block will run
 # in as this user. block will run during the configure step
 def user(name, groups: [], &block)
+  name = name.to_s
+
   @user ||= {}
   @user[name] ||= {}
   @user[name][:groups] ||= []
@@ -149,11 +151,9 @@ def user(name, groups: [], &block)
 
   on_configure do
     @user.each do |name, conf|
-      if groups.empty?
-        sudo "useradd --groups #{groups.join(",")} #{name}"
-      else
-        sudo "useradd #{name}"
-      end
+      exists = Etc.getpwnam name rescue nil
+      sudo "useradd #{name}" if exists
+      sudo "usermod --groups #{groups.join(",")} #{name}" if groups.any?
 
       fork do
         currentuser = Etc.getpwnam(name)
@@ -162,6 +162,7 @@ def user(name, groups: [], &block)
         ENV['XDG_RUNTIME_DIR'] = "/run/user/#{currentuser.uid}"
         conf[:state].run_steps
       end
+
       Process.wait
     end
   end
@@ -219,5 +220,16 @@ def file(path, content)
     @files.each do |path, content|
       File.write(path, content)
     end
+  end
+end
+
+def hostname(name)
+  @hostname = name
+
+  file '/etc/hostname', "#{@hostname}\n"
+
+  on_configure do
+    log "Setting hostname", hostname: @hostname
+    sudo "hostnamectl set-hostname #{@hostname}"
   end
 end
