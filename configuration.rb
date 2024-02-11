@@ -6,6 +6,7 @@ linux do
   timedate timezone: 'Europe/Berlin',
            ntp: true
 
+  locale "en_US.UTF-8"
   keyboard keymap: 'us',
            layout: "us,ara",
            model: "",

@@ -137,6 +137,14 @@ def keyboard(keymap: nil, layout: nil, model: nil, variant: nil, options: nil)
   end
 end
 
+def locale(value)
+  @locale = value
+
+  on_prepare do
+    sudo "localectl set-locale #{@locale}"
+  end
+end
+
 # create a user and assign a set of group. if block is passes the block will run
 # in as this user. block will run during the configure step
 def user(name, groups: [], &block)
