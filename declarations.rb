@@ -206,7 +206,18 @@ def firewall(*allow)
   service :ufw
 
   on_configure do
-    next unless @firewall
     sudo "ufw allow #{@firewall.join(' ')}"
+  end
+end
+
+# Write a file during configure step
+def file(path, content)
+  @files ||= {}
+  @files[path] = content
+
+  on_configure do
+    @files.each do |path, content|
+      File.write(path, content)
+    end
   end
 end

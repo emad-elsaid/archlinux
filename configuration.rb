@@ -225,6 +225,17 @@ linux do
     sudo 'reinstall-kernels'
   end
 
-  copy './root/etc', '/'
+  # turn on click with tap and natural scrolling
+  file '/etc/X11/xorg.conf.d/40-touchpad.conf', <<-EOT
+Section "InputClass"
+        Identifier "libinput touchpad catchall"
+        MatchIsTouchpad "on"
+        MatchDevicePath "/dev/input/event*"
+        Driver "libinput"
+        Option "Tapping" "on"
+        Option "NaturalScrolling" "true"
+EndSection
+EOT
+
   replace '/etc/mkinitcpio.conf', /^(.*)base udev(.*)$/, '\1systemd\2'
 end
