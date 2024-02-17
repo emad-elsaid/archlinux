@@ -94,3 +94,16 @@ linux do
   replace '/etc/mkinitcpio.conf', /^(.*)base udev(.*)$/, '\1systemd\2'
 end
 ```
+
+Now you can run the script with ruby as root:
+
+```shell
+sudo ruby <script-name.rb>
+```
+
+
+It will do the following:
+- Install missing packages, remove any other package
+- Make sure services and timers are running
+- Do other configurations like locale, X11 keyboard settings, hostname
+- Ensure users are created and in specified groups
