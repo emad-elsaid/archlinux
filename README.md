@@ -1,6 +1,7 @@
 # Archlinux
 
-WARNING: this can break your system, don't use it on your running system
+> [!WARNING]
+> this can break your system, don't use it on your running system
 
 A ruby API to manage the state of an Archlinux system.
 
