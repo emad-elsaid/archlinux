@@ -1,4 +1,4 @@
-require_relative 'lib'
+require_relative 'lib/archlinux'
 
 linux do
   hostname 'earth'
