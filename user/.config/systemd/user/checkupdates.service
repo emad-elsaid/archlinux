@@ -1,7 +1,0 @@
-[Unit]
-Description=Check for updates and write result
-
-[Service]
-Type=simple
-ExecStart=checkupdates
-StandardOutput=file:%h/Documents/checkupdates.txt
