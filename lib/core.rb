@@ -15,21 +15,21 @@ class State
     @prepare_steps[id] = block
   end
 
-  # Same as on_prepare but for install step
+  # Same as {#on_prepare} but for install step
   def on_install(id=nil, &block)
     id ||=  caller_locations(1,1).first.to_s
     @install_steps ||= {}
     @install_steps[id] = block
   end
 
-  # Same as on_prepare but for configure step
+  # Same as {.on_prepare} but for configure step
   def on_configure(id=nil, &block)
     id ||=  caller_locations(1,1).first.to_s
     @configure_steps ||= {}
     @configure_steps[id] = block
   end
 
-  # Same as on_finalize but for configure step
+  # Same as {.on_prepare} but for configure step
   def on_finalize(id=nil, &block)
     id ||=  caller_locations(1,1).first.to_s
     @finalize_steps ||= {}
@@ -38,26 +38,20 @@ class State
 
   # Run all registered code blocks in the following order: Prepare, Install, Configure, Finalize
   def run_steps
-    if @prepare_steps&.any?
-      log "=> Prepare"
-      @prepare_steps.each { |_, step| apply(step) }
-    end
-
-    if @install_steps&.any?
-      log "=> Install"
-      @install_steps.each { |_, step| apply(step) }
-    end
-
-    if @configure_steps&.any?
-      log "=> Configure"
-      @configure_steps.each { |_, step| apply(step) }
-    end
-
-    if @finalize_steps&.any?
-      log "=> Finalize"
-      @finalize_steps.each { |_, step| apply(step) }
-    end
+    run_step("Prepare", @prepare_steps)
+    run_step("Install", @install_steps)
+    run_step("Configure", @configure_steps)
+    run_step("Finalize", @finalize_steps)
   end
+end
+
+private
+
+def run_step(name, step)
+  return unless @prepare_steps&.any?
+
+  log "=> #{name}"
+  step.each { |_, s| apply(s) }
 end
 
 # @group Core:
