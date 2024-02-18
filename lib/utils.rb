@@ -22,10 +22,13 @@ def log(msg, args={})
   end
 end
 
+# Checks if current user is the root
+# @return [Boolean] true if current user is root and false otherwise
 def root?
   Process.uid == Etc.getpwnam('root').uid
 end
 
+# Runs the command with sudo if current user is not root
 def sudo(command)
   root? ? system(command) : system("sudo #{command}")
 end

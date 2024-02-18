@@ -135,6 +135,7 @@ def keyboard(keymap: nil, layout: nil, model: nil, variant: nil, options: nil)
   end
 end
 
+# Sets locale using localectl
 def locale(value)
   @locale = value
 
@@ -229,6 +230,8 @@ def file(path, content)
   end
 end
 
+
+# Sets the machine hostname
 def hostname(name)
   @hostname = name
 
