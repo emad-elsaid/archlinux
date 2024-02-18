@@ -48,7 +48,7 @@ end
 private
 
 def run_step(name, step)
-  return unless @prepare_steps&.any?
+  return unless step&.any?
 
   log "=> #{name}"
   step.each { |_, s| apply(s) }
