@@ -1,10 +1,10 @@
 require 'etc'
 
-# ==============================================================
-# UTILITIES:
-# functions for logging, tracing, error reporting, coloring text
-# ==============================================================
-
+# Prints a message to the STDOUT
+#
+# @param [String] msg a log message to print
+#
+# @param [Hash<String, Object>] args prints each key and value in separate lines after message
 def log(msg, args={})
   puts msg
 

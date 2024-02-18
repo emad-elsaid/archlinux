@@ -1,5 +1,7 @@
 # Archlinux
 
+[![Gem Version](https://badge.fury.io/rb/archlinux.svg)](https://badge.fury.io/rb/archlinux)
+
 > [!WARNING]
 > this can break your system, don't use it on your running system
 
