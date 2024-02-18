@@ -1,11 +1,9 @@
 require 'set'
 require 'fileutils'
 
-# ==============================================================
-# DECLARATIONS:
+# @group Declarations:
 # Functions the user will run to declare the state of the system
 # like packages to be present, files, services, user, group...etc
-# ==============================================================
 
 # Install a package on install step and remove packages not registered with this
 # function

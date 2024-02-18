@@ -1,10 +1,10 @@
 require 'etc'
 
+# @group Utilities: Methods for logging and small predicates
+
 # Prints a message to the STDOUT
-#
-# @param [String] msg a log message to print
-#
-# @param [Hash<String, Object>] args prints each key and value in separate lines after message
+# @param msg [String] a log message to print
+# @param args [Hash<String, Object>] prints each key and value in separate lines after message
 def log(msg, args={})
   puts msg
 

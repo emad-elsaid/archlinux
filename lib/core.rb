@@ -1,9 +1,6 @@
-# ==============================================================
-# CORE:
 # State of the system It should hold all the information we need to build the
 # system, packages, files, changes...etc. everything will run inside an instance
 # of this class
-# ==============================================================
 class State
   def apply(block)
     instance_eval &block
@@ -63,7 +60,9 @@ class State
   end
 end
 
-# passed block will run in the context of a State instance and then a builder
+# @group Core:
+
+# passed block will run in the context of a {State} instance and then a builder
 # will build this state
 def linux(&block)
   s = State.new
