@@ -167,6 +167,9 @@ def user(name, groups: [], &block)
         Process::GID.change_privilege(currentuser.gid)
         Process::UID.change_privilege(currentuser.uid)
         ENV['XDG_RUNTIME_DIR'] = "/run/user/#{currentuser.uid}"
+        ENV['HOME'] = currentuser.dir
+        ENV['USER'] = currentuser.name
+        ENV['LOGNAME'] = currentuser.name
         conf[:state].run_steps
       end
 
