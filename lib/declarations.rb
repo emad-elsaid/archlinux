@@ -245,3 +245,25 @@ def hostname(name)
     sudo "hostnamectl set-hostname #{@hostname}"
   end
 end
+
+# link file to destination
+def symlink(target, link_name)
+  @symlink ||= Set.new
+  @symlink << {target: target, link_name: link_name}
+
+  on_configure do
+
+    @symlink.each do |params|
+      target = File.expand_path params[:target]
+      link_name = File.expand_path params[:link_name]
+      log "Linking", target: target, link_name: link_name
+
+      # make the parent if it doesn't exist
+      dest_dir = File.dirname(link_name)
+      FileUtils.mkdir_p(dest_dir) unless File.exist?(dest_dir)
+
+      # link with force
+      FileUtils.ln_s(target, link_name, force: true)
+    end
+  end
+end
