@@ -159,7 +159,7 @@ def user(name, groups: [], &block)
   on_configure do
     @user.each do |name, conf|
       exists = Etc.getpwnam name rescue nil
-      sudo "useradd #{name}" if exists
+      sudo "useradd #{name}" unless exists
       sudo "usermod --groups #{groups.join(",")} #{name}" if groups.any?
 
       fork do
