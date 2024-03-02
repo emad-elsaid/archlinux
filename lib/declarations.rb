@@ -269,9 +269,10 @@ def symlink(target, link_name)
 end
 
 # on prepare make sure the directory exists
-def mkdir(path)
+def mkdir(*path)
+  path.flatten!
   @mkdir ||= Set.new
-  @mkdir << path
+  @mkdir += path
 
   on_prepare do
     @mkdir.each do |path|
