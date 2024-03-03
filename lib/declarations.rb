@@ -52,7 +52,13 @@ def aur(*names)
       names.each do |package|
         system("git clone --depth 1 --shallow-submodules https://aur.archlinux.org/#{package}.git") unless Dir.exists?(package)
         Dir.chdir package do
-          system("makepkg --syncdeps --install --noconfirm --needed")
+
+          pkgbuild = File.readlines('PKGBUILD')
+          pkgver = pkgbuild.find { |l| l.start_with?('pkgver=') }.split('=')[1].strip.chomp('"')
+          package_info = `pacman -Qi #{package}`.strip.lines.map{|l| l.strip.split(/\s*:\s*/, 2) }.to_h
+          installed = package_info["Version"].to_s.split("-")[0] == pkgver
+
+          system("makepkg --syncdeps --install --noconfirm --needed") unless installed
         end
       end
     end
