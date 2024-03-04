@@ -110,3 +110,10 @@ It will do the following:
 - Make sure services and timers are running
 - Do other configurations like locale, X11 keyboard settings, hostname
 - Ensure users are created and in specified groups
+
+
+# Concepts
+
+## Declarations:
+
+Functions the user will run to declare the state of the system like packages to be present, files, services, user, group...etc
