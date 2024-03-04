@@ -5,7 +5,7 @@ require 'set'
 # on prepare make sure a git repository is cloned to directory
 def git_clone(from:, to: nil)
   @git_clone ||= Set.new
-  @git_clone << {from: from, to: to}
+  @git_clone << { from: from, to: to }
 
   on_install do
     @git_clone.each do |item|

@@ -21,7 +21,7 @@ end
 # Replace a regex pattern with replacement string in a file during configure step
 def replace(file, pattern, replacement)
   @replace ||= []
-  @replace << {file: file, pattern: pattern, replacement: replacement}
+  @replace << { file: file, pattern: pattern, replacement: replacement }
 
   on_configure do
     @replace.each do |params|
@@ -35,10 +35,9 @@ end
 # link file to destination
 def symlink(target, link_name)
   @symlink ||= Set.new
-  @symlink << {target: target, link_name: link_name}
+  @symlink << { target: target, link_name: link_name }
 
   on_configure do
-
     @symlink.each do |params|
       target = File.expand_path params[:target]
       link_name = File.expand_path params[:link_name]

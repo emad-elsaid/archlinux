@@ -5,5 +5,6 @@ Gem::Specification.new do |s|
   s.name        = 'archlinux'
   s.summary     = "Archlinux DSL to manage whole system state"
   s.version     = '0.0.1'
-  s.licenses     = ["GPL-3.0-or-later"]
+  s.licenses = ["GPL-3.0-or-later"]
+  s.metadata['rubygems_mfa_required'] = 'true'
 end

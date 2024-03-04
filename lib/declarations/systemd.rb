@@ -4,7 +4,7 @@ require 'set'
 
 # set timezone and NTP settings during prepare step
 def timedate(timezone: 'UTC', ntp: true)
-  @timedate = {timezone: timezone, ntp: ntp}
+  @timedate = { timezone: timezone, ntp: ntp }
 
   on_configure do
     log "Set timedate", @timedate
@@ -27,8 +27,10 @@ def service(*names)
 
     # Disable services that were enabled manually and not in the list we have
     services = `systemctl list-unit-files #{user_flags} --state=enabled --type=service --no-legend --no-pager`
-    enabled_manually = services.lines.map{|l| l.strip.split(/\s+/) }.select{|l| (l[1] == 'enabled') && (l[2] == 'disabled')}
-    names_without_extension = enabled_manually.map{|l| l.first.delete_suffix(".service") }
+    enabled_manually = services.lines.map do |l|
+                         l.strip.split(/\s+/)
+                       end.select { |l| (l[1] == 'enabled') && (l[2] == 'disabled') }
+    names_without_extension = enabled_manually.map { |l| l.first.delete_suffix(".service") }
     to_disable = names_without_extension - @services.to_a
 
     next if to_disable.empty?
@@ -46,7 +48,7 @@ def timer(*names)
 
   on_finalize do
     log "Enable timers", timers: @timers
-    timers = @timers.map{ |t| "#{t}.timer" }.join(" ")
+    timers = @timers.map { |t| "#{t}.timer" }.join(" ")
     if root?
       sudo "systemctl enable #{timers}"
     else

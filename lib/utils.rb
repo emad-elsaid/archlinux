@@ -5,7 +5,7 @@ require 'etc'
 # Prints a message to the STDOUT
 # @param msg [String] a log message to print
 # @param args [Hash<String, Object>] prints each key and value in separate lines after message
-def log(msg, args={})
+def log(msg, args = {})
   puts msg
 
   return unless args.any?

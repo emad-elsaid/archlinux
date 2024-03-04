@@ -3,35 +3,35 @@
 # of this class
 class State
   def apply(block)
-    instance_eval &block
+    instance_eval(&block)
   end
 
   # Run block on prepare step. id identifies the block uniqueness in the steps.
   # registering a block with same id multiple times replaces old block by new
   # one. if id is nil the block location in source code is used as an id
-  def on_prepare(id=nil, &block)
-    id ||=  caller_locations(1,1).first.to_s
+  def on_prepare(id = nil, &block)
+    id ||= caller_locations(1, 1).first.to_s
     @prepare_steps ||= {}
     @prepare_steps[id] = block
   end
 
   # Same as {#on_prepare} but for install step
-  def on_install(id=nil, &block)
-    id ||=  caller_locations(1,1).first.to_s
+  def on_install(id = nil, &block)
+    id ||= caller_locations(1, 1).first.to_s
     @install_steps ||= {}
     @install_steps[id] = block
   end
 
   # Same as {.on_prepare} but for configure step
-  def on_configure(id=nil, &block)
-    id ||=  caller_locations(1,1).first.to_s
+  def on_configure(id = nil, &block)
+    id ||= caller_locations(1, 1).first.to_s
     @configure_steps ||= {}
     @configure_steps[id] = block
   end
 
   # Same as {.on_prepare} but for configure step
-  def on_finalize(id=nil, &block)
-    id ||=  caller_locations(1,1).first.to_s
+  def on_finalize(id = nil, &block)
+    id ||= caller_locations(1, 1).first.to_s
     @finalize_steps ||= {}
     @finalize_steps[id] = block
   end

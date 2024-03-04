@@ -1,0 +1,15 @@
+AllCops:
+  NewCops: enable
+
+Style/StringLiterals:
+  Enabled: false
+Style/FrozenStringLiteralComment:
+  Enabled: false
+Style/StringLiteralsInInterpolation:
+  Enabled: false
+Metrics/MethodLength:
+  Max: 100
+Lint/ShadowingOuterLocalVariable:
+  Enabled: false
+Style/RescueModifier:
+  Enabled: false
