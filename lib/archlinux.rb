@@ -1,5 +1,5 @@
 def require_relative_dir(dir)
-  Dir["#{File.dirname(__FILE__)}/#{dir}/**/*.rb"].sort.each { |f| require f }
+  Dir["#{File.dirname(__FILE__)}/#{dir}/**/*.rb"].each { |f| require f }
 end
 
 require_relative 'core'

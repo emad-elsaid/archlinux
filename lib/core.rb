@@ -51,7 +51,7 @@ def run_step(name, step)
   return unless step&.any?
 
   log "=> #{name}"
-  step.each { |_, s| apply(s) }
+  step.each_value { |s| apply(s) }
 end
 
 # @group Core:

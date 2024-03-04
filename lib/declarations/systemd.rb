@@ -27,9 +27,10 @@ def service(*names)
 
     # Disable services that were enabled manually and not in the list we have
     services = `systemctl list-unit-files #{user_flags} --state=enabled --type=service --no-legend --no-pager`
-    enabled_manually = services.lines.map do |l|
-                         l.strip.split(/\s+/)
-                       end.select { |l| (l[1] == 'enabled') && (l[2] == 'disabled') }
+    enabled_manually = services.lines
+    enabled_manually.map! { |l| l.strip.split(/\s+/) }
+    enabled_manually.select! { |l| (l[1] == 'enabled') && (l[2] == 'disabled') }
+
     names_without_extension = enabled_manually.map { |l| l.first.delete_suffix(".service") }
     to_disable = names_without_extension - @services.to_a
 

@@ -1,5 +1,6 @@
 AllCops:
   NewCops: enable
+  TargetRubyVersion: 3.0
 
 Style/StringLiterals:
   Enabled: false
@@ -12,4 +13,10 @@ Metrics/MethodLength:
 Lint/ShadowingOuterLocalVariable:
   Enabled: false
 Style/RescueModifier:
+  Enabled: false
+Metrics/AbcSize:
+  Enabled: false
+Metrics/CyclomaticComplexity:
+  Enabled: false
+Metrics/PerceivedComplexity:
   Enabled: false

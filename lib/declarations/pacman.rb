@@ -64,7 +64,7 @@ def aur(*names)
         Dir.chdir package do
           pkgbuild = File.readlines('PKGBUILD')
           pkgver = pkgbuild.find { |l| l.start_with?('pkgver=') }.split('=')[1].strip.chomp('"')
-          package_info = `pacman -Qi #{package}`.strip.lines.map { |l| l.strip.split(/\s*:\s*/, 2) }.to_h
+          package_info = `pacman -Qi #{package}`.strip.lines.to_h { |l| l.strip.split(/\s*:\s*/, 2) }
           installed = package_info["Version"].to_s.split("-")[0] == pkgver
 
           system("makepkg --syncdeps --install --noconfirm --needed") unless installed

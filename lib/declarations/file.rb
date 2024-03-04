@@ -45,7 +45,7 @@ def symlink(target, link_name)
 
       # make the parent if it doesn't exist
       dest_dir = File.dirname(link_name)
-      FileUtils.mkdir_p(dest_dir) unless File.exist?(dest_dir)
+      FileUtils.mkdir_p(dest_dir)
 
       # link with force
       FileUtils.ln_s(target, link_name, force: true)

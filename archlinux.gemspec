@@ -7,4 +7,5 @@ Gem::Specification.new do |s|
   s.version     = '0.0.1'
   s.licenses = ["GPL-3.0-or-later"]
   s.metadata['rubygems_mfa_required'] = 'true'
+  s.required_ruby_version = '>=3.0'
 end
