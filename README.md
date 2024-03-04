@@ -116,4 +116,10 @@ It will do the following:
 
 ## Declarations:
 
-Functions the user will run to declare the state of the system like packages to be present, files, services, user, group...etc
+Functions the user will run to declare the state of the system like packages to
+be present, files, services, user, group...etc
+
+## Utilities:
+
+Methods for logging and small predicates, technically any ruby method is a
+utility. calling it executes the code directly instead of declaring a state.

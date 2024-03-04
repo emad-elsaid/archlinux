@@ -1,6 +1,6 @@
 require 'etc'
 
-# @group Utilities: Methods for logging and small predicates
+# @group Utilities
 
 # Prints a message to the STDOUT
 # @param msg [String] a log message to print
