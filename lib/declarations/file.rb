@@ -75,6 +75,8 @@ def file(path, content)
     @files.each do |path, content|
       FileUtils.mkdir_p File.dirname(path)
       File.write(path, content)
+    rescue Errno::ENOENT => e
+      log "Error: Can't write file", file: path, error: e
     end
   end
 end
