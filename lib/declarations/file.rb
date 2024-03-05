@@ -73,6 +73,7 @@ def file(path, content)
 
   on_configure do
     @files.each do |path, content|
+      FileUtils.mkdir_p File.dirname(path)
       File.write(path, content)
     end
   end
