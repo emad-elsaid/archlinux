@@ -20,20 +20,24 @@ def service(*names)
   @services += names.map(&:to_s)
 
   on_finalize do
-    log "Enable services", services: @services
     user_flags = root? ? "" : "--user"
 
-    system "systemctl enable #{user_flags} #{@services.join(" ")}"
+    services = `systemctl list-unit-files #{user_flags} --state=enabled --type=service --no-legend --no-pager`
+    enabled = services.lines
+    enabled.map! { |l| l.strip.split(/\s+/) }
+    enabled.each { |l| l[0].delete_suffix!(".service") }
+
+    to_enable = @services - enabled.map(&:first)
+
+    if to_enable.any?
+      log "Enable services", services: to_enable
+      system "systemctl enable #{user_flags} #{to_enable.join(" ")}"
+    end
 
     # Disable services that were enabled manually and not in the list we have
-    services = `systemctl list-unit-files #{user_flags} --state=enabled --type=service --no-legend --no-pager`
-    enabled_manually = services.lines
-    enabled_manually.map! { |l| l.strip.split(/\s+/) }
-    enabled_manually.select! { |l| (l[1] == 'enabled') && (l[2] == 'disabled') }
+    enabled_manually = enabled.select! { |l| l[2] == 'disabled' }.map(&:first)
 
-    names_without_extension = enabled_manually.map { |l| l.first.delete_suffix(".service") }
-    to_disable = names_without_extension - @services.to_a
-
+    to_disable = enabled_manually - @services.to_a
     next if to_disable.empty?
 
     log "Services to disable", packages: to_disable
