@@ -52,12 +52,11 @@ def aur(*names)
   @aurs += names.map(&:to_s)
 
   on_install do
-    names = @aurs || []
-    log "Install AUR packages", packages: names
+    log "Install AUR packages", packages: @aurs
     cache = "./cache/aur"
     FileUtils.mkdir_p cache
     Dir.chdir cache do
-      names.each do |package|
+      @aurs.each do |package|
         unless Dir.exist?(package)
           system("git clone --depth 1 --shallow-submodules https://aur.archlinux.org/#{package}.git")
         end
@@ -71,5 +70,12 @@ def aur(*names)
         end
       end
     end
+
+    foreign = Set.new(`pacman -Qm`.lines.map { |l| l.split(/\s+/, 2).first })
+    unneeded = foreign - @aurs
+    next if unneeded.empty?
+
+    log "Foreign packages to remove", packages: unneeded
+    sudo("pacman -Rs #{unneeded.join(" ")}")
   end
 end
