@@ -37,7 +37,7 @@ def service(*names)
     next if to_disable.empty?
 
     log "Services to disable", packages: to_disable
-    # system "systemctl disable #{user_flags} #{to_disable.join(" ")}"
+    system "systemctl disable #{user_flags} #{to_disable.join(" ")}"
   end
 end
 
