@@ -13,7 +13,7 @@ def user(name, groups: [], autologin: nil, &block)
   @user[name][:groups] ||= []
   @user[name][:groups] += groups.map(&:to_s)
   @user[name][:autologin] = autologin unless autologin.nil?
-  @user[name][:state] = State.new
+  @user[name][:state] ||= State.new
   @user[name][:state].apply(block) if block_given?
 
   on_configure do
