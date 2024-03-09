@@ -41,7 +41,7 @@ def package(*names)
     next if unneeded.empty?
 
     log "Removing packages", packages: unneeded
-    sudo("pacman -Rs #{unneeded.join(" ")}")
+    sudo("pacman -Rsu #{unneeded.join(" ")}")
   end
 end
 
@@ -76,6 +76,6 @@ def aur(*names)
     next if unneeded.empty?
 
     log "Foreign packages to remove", packages: unneeded
-    sudo("pacman -Rs #{unneeded.join(" ")}")
+    sudo("pacman -Rsu #{unneeded.join(" ")}")
   end
 end
