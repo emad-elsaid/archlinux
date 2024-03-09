@@ -41,6 +41,12 @@ def symlink(target, link_name)
     @symlink.each do |params|
       target = File.expand_path params[:target]
       link_name = File.expand_path params[:link_name]
+
+      if File.directory?(target)
+        log "Can't link directories", target: target, link_name: link_name
+        exit
+      end
+
       log "Linking", target: target, link_name: link_name
 
       # make the parent if it doesn't exist
