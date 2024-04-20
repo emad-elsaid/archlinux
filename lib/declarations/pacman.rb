@@ -19,6 +19,21 @@ def package(*names)
 
   # install step to install packages required and remove not required
   on_install do
+    # Expand groups to packages
+    packages_args = @packages.join(" ")
+    group_packages = Set.new(`pacman --quiet -Sg #{packages_args}`.lines.map(&:strip))
+
+    all = @packages + group_packages # full list of packages that should exist on the system
+
+    # actual list on the system
+    installed = Set.new(`pacman -Q --quiet --explicit --unrequired --native`.lines.map(&:strip))
+
+    unneeded = installed - all
+    if unneeded.any?
+      log "Removing packages", packages: unneeded
+      sudo("pacman -Rsu #{unneeded.join(" ")}")
+    end
+
     # install missing packages
     need_install = @packages.reject { |p| package? p }
     need_install_args = need_install.join(" ")
@@ -26,22 +41,6 @@ def package(*names)
       log "Installing packages", packages: need_install
       sudo "pacman --noconfirm --needed -S #{need_install_args}"
     end
-
-    # expand groups to packages
-    packages_args = @packages.join(" ")
-    group_packages = Set.new(`pacman --quiet -Sg #{packages_args}`.lines.map(&:strip))
-
-    # full list of packages that should exist on the system
-    all = @packages + group_packages
-
-    # actual list on the system
-    installed = Set.new(`pacman -Q --quiet --explicit --unrequired --native`.lines.map(&:strip))
-
-    unneeded = installed - all
-    next if unneeded.empty?
-
-    log "Removing packages", packages: unneeded
-    sudo("pacman -Rsu #{unneeded.join(" ")}")
   end
 end
 
