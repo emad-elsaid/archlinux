@@ -47,6 +47,15 @@ def symlink(target, link_name)
         exit
       end
 
+      # Check if file exists and is a symlink
+      if File.exist?(link_name) && File.symlink?(link_name)
+        links_to = File.readlink(link_name)
+        next if links_to == target # skip creating link if it's already exists
+
+        # Remove the link if it links to something else
+        File.unlink link_name
+      end
+
       log "Linking", target: target, link_name: link_name
 
       # make the parent if it doesn't exist
