@@ -11,6 +11,8 @@ def ufw(*allow)
   service :ufw
 
   on_configure do
-    sudo "ufw allow #{@ufw.join(' ')}"
+    @ufw.each do |port|
+      sudo "ufw allow #{port}"
+    end
   end
 end
