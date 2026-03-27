@@ -1,125 +1,397 @@
-# Archlinux
+# archlinux
 
-[![Gem Version](https://badge.fury.io/rb/archlinux.svg)](https://badge.fury.io/rb/archlinux)
+A declarative system configuration management framework for Arch Linux written in Go.
 
-> [!WARNING]
-> this can break your system, don't use it on your running system
+> **Note**: This is a complete rewrite from the original Ruby implementation. The Go version provides
+> better performance, type safety, and easier distribution as a single binary.
 
-A ruby API to manage the state of an Archlinux system.
+## Overview
 
-* This project is early alpha
-* It aims to have a DSL like NixOS for Archlinux
-* It allow declaring the state of the system then it applies that to the current system
-* The idea is to have simple and user friendly API to declare everything, system and user related
+`archlinux` allows you to declare your entire system state (packages, services, files, configurations) as Go code, and synchronizes your Arch Linux system to match that declared state. Think of it as a type-safe, compiled alternative to configuration management tools like Ansible or NixOS, specifically tailored for Arch Linux.
 
-## Getting started
+## Features
 
-The project is a Ruby Gem. Create a ruby file and require the gem:
+- **Declarative Configuration**: Define what you want, not how to get it
+- **Package Management**: Manages pacman packages (including AUR via yay)
+- **Multiple Package Managers**: Support for Flatpak, npm, Go packages, Ruby gems
+- **System Configuration**: Timezone, locale, keyboard settings
+- **Systemd Services**: Enable/disable system and user services, timers, and sockets
+- **User Groups**: Manage user group memberships
+- **System Files**: Deploy and track system configuration files
+- **Dotfile Management**: GNU Stow integration for user dotfiles
+- **Broken Symlink Cleanup**: Automatically detect and remove broken symlinks
+- **Two-Phase Execution**: Preview changes before applying (diff mode)
+- **State Tracking**: Knows what it installed and can clean up unwanted resources
+- **Dependency Awareness**: Won't remove packages that other wanted packages depend on
 
-```ruby
-require 'bundler/inline'
+## Installation
 
-gemfile do
-  source "https://rubygems.org"
+### Prerequisites
 
-  gem "archlinux", github: "emad-elsaid/archlinux"
-end
+Before using this framework, ensure you have:
+
+1. Arch Linux system
+2. Go 1.25+ installed
+3. `yay` AUR helper installed (see [yay installation](https://github.com/Jguer/yay#installation))
+4. `stow` for dotfile management
+
+### Quick Start
+
+1. Create a new Go module for your system configuration:
+
+```bash
+mkdir -p ~/mysystem
+cd ~/mysystem
+go mod init mysystem
+go get github.com/emad-elsaid/archlinux
 ```
 
-Use `linux` function to define your system state, for example:
+2. Create your configuration file (e.g., `main.go`):
 
-```ruby
-linux do
-  hostname 'earth'
+```go
+package main
 
-  timedate timezone: 'Europe/Berlin',
-           ntp: true
+import "github.com/emad-elsaid/archlinux"
 
-  locale "en_US.UTF-8"
-  keyboard keymap: 'us',
-           layout: "us,ara",
-           model: "",
-           variant: "",
-           options: "ctrl:nocaps,caps:lctrl,ctrl:swap_lalt_lctl,grp:alt_space_toggle"
+func init() {
+    // Declare packages
+    archlinux.Package(
+        "vim",
+        "git",
+        "docker",
+        "firefox",
+    )
 
-  package %w[
-          linux
-          linux-firmware
-          linux-headers
-          base
-          base-devel
-          bash-completion
-          pacman-contrib
-          docker
-          locate
-          syncthing
-          ]
+    // Enable services
+    archlinux.SystemService("docker")
 
-  service %w[
-          docker
-          NetworkManager
-          ]
+    // Configure system
+    archlinux.Timedate("America/New_York", true)
+    archlinux.Locale("en_US.UTF-8 UTF-8")
+}
 
-  timer 'plocate-updatedb'
-
-  user 'smith', groups: ['wheel', 'docker'] do
-    aur %w[
-        kernel-install-mkinitcpio
-        google-chrome
-        ]
-
-    service %w[
-            ssh-agent
-            syncthing
-            ]
-
-    copy './user/.config/.', '/home/smith/.config'
-  end
-
-  firewall :syncthing
-
-  on_finalize do
-    sudo 'bootctl install'
-    sudo 'reinstall-kernels'
-  end
-
-  file '/etc/X11/xorg.conf.d/40-touchpad.conf', <<~EOT
-  Section "InputClass"
-          Identifier "libinput touchpad catchall"
-          MatchIsTouchpad "on"
-          MatchDevicePath "/dev/input/event*"
-          Driver "libinput"
-          Option "Tapping" "on"
-          Option "NaturalScrolling" "true"
-  EndSection
-  EOT
-
-  replace '/etc/mkinitcpio.conf', /^(.*)base udev(.*)$/, '\1systemd\2'
-end
+func main() {
+    archlinux.Main()
+}
 ```
 
-Now you can run the script with ruby as root:
+3. Run commands:
 
-```shell
-sudo ruby <script-name.rb>
+```bash
+# Preview what would change
+go run . diff
+
+# Apply configuration
+go run . apply
+
+# Save current system state back to Go files
+go run . save
 ```
 
+## Usage
 
-It will do the following:
-- Install missing packages, remove any other package
-- Make sure services and timers are running
-- Do other configurations like locale, X11 keyboard settings, hostname
-- Ensure users are created and in specified groups
+### Commands
 
+- **`apply`**: Synchronize your system to match the declared configuration
+  - Installs missing packages
+  - Enables/disables services
+  - Deploys system files
+  - Removes unwanted resources (with confirmation)
 
-# Concepts
+- **`diff`**: Show what would change without making any modifications
+  - Useful for previewing changes before applying
+  - Safe to run anytime
 
-## Declarations:
+- **`save`**: Capture current system state as Go code
+  - Generates `.go` files with function calls that match your system
+  - Useful after manual installations to capture them declaratively
 
-Functions the user will run to declare the state of the system like packages to
-be present, files, services, user, group...etc
+### Package Management
 
-## Utilities:
+#### Pacman Packages
 
-Methods for logging and small predicates, technically any ruby method is a
-utility. calling it executes the code directly instead of declaring a state.
+```go
+// Individual packages
+archlinux.Package("vim", "git", "docker")
+
+// Package groups
+archlinux.PackageGroup("base-devel")
+```
+
+#### Flatpak Applications
+
+```go
+archlinux.Flatpak(
+    "com.slack.Slack",
+    "org.mozilla.firefox",
+)
+```
+
+#### NPM Packages (Global)
+
+```go
+archlinux.NpmPackage(
+    "typescript",
+    "@vue/cli",
+    "eslint@8.50.0",  // Version pinning
+)
+```
+
+#### Go Packages
+
+```go
+archlinux.GoPackage(
+    "github.com/golangci/golangci-lint/cmd/golangci-lint@latest",
+    "golang.org/x/tools/cmd/goimports",
+)
+```
+
+#### Ruby Gems
+
+```go
+archlinux.RubyGem(
+    "bundler",
+    "rails@7.0.0",  // Version pinning
+)
+```
+
+### System Configuration
+
+#### Timezone and NTP
+
+```go
+archlinux.Timedate("America/New_York", true)  // timezone, enable NTP
+```
+
+#### Locale
+
+```go
+archlinux.Locale("en_US.UTF-8 UTF-8")
+```
+
+#### Keyboard
+
+```go
+archlinux.Keyboard(
+    "us",        // keymap
+    "us",        // layout
+    "pc105",     // model
+    "",          // variant
+    "ctrl:nocaps", // options
+)
+```
+
+### Systemd Services
+
+```go
+// System services
+archlinux.SystemService("docker", "sshd")
+archlinux.SystemTimer("fstrim")
+archlinux.SystemSocket("docker")
+
+// User services
+archlinux.Service("syncthing")
+archlinux.Timer("backup")
+archlinux.Socket("pipewire")
+```
+
+### User Groups
+
+```go
+archlinux.Group("docker", "wheel", "audio", "video")
+```
+
+### System Files
+
+Place files in a `system/` directory mirroring their target paths:
+
+```
+system/
+  etc/
+    hosts
+    pacman.conf
+  usr/
+    local/
+      bin/
+        myscript
+```
+
+```go
+// Automatically discovers and manages files in system/
+archlinux.SystemFilesDir("system")
+```
+
+### Dotfiles with GNU Stow
+
+Place your dotfiles in `user/` directory:
+
+```
+user/
+  .config/
+    nvim/
+      init.vim
+  .bashrc
+  .vimrc
+```
+
+Dotfiles are automatically managed when using `apply` or `save` commands.
+
+### Lifecycle Hooks
+
+Execute custom code before or after resource synchronization:
+
+```go
+// Run after docker is installed
+archlinux.After(archlinux.ResourcePackages, func() {
+    // Custom setup logic
+})
+
+// Run before applying configuration
+archlinux.OnCommand(archlinux.PhaseBeforeApply, func() {
+    // Pre-apply checks
+})
+```
+
+## Architecture
+
+### Two-Phase Execution
+
+1. **Configuration Phase**: Builds lists of desired state by executing your Go code
+2. **Synchronization Phase**: Compares current state with desired state and applies changes
+
+### Package Manager Interface
+
+All resource types implement the same interface:
+
+```go
+type packageManager interface {
+    ResourceName() string
+    Wanted() []string
+    Match(want, have string) bool
+    ListInstalled() ([]string, error)
+    ListExplicit() ([]string, error)
+    Install(pkgs []string) error
+    Uninstall(pkgs []string) error
+    MarkExplicit(pkgs []string) error
+    GetDependencies() (map[string][]string, error)
+    SaveAsGo(wanted []string) error
+}
+```
+
+### State Tracking
+
+- Pacman packages: Uses pacman's built-in explicit/dependency tracking
+- System files: Maintains state in `~/.local/share/dotfiles/system-files-state.json`
+- Dotfiles: Managed via GNU Stow
+- Services: Tracked via systemd's enabled/disabled state
+
+## Advanced Topics
+
+### Modular Configuration
+
+Organize your configuration into multiple files:
+
+```
+mysystem/
+  main.go           # Entry point
+  packages.go       # Package declarations
+  services.go       # Service declarations
+  system.go         # System configuration
+```
+
+Each file can have `init()` functions that declare resources:
+
+```go
+// packages.go
+package main
+
+import "github.com/emad-elsaid/archlinux"
+
+func init() {
+    archlinux.Package("vim", "git")
+}
+```
+
+### Machine-Specific Configuration
+
+Use build tags or environment variables for machine-specific config:
+
+```go
+// +build workstation
+
+package main
+
+import "github.com/emad-elsaid/archlinux"
+
+func init() {
+    archlinux.Package("docker", "kubectl")
+}
+```
+
+### Custom Dependencies
+
+Add custom dependency checks:
+
+```go
+archlinux.OnCommand(archlinux.PhaseBeforeApply, func() {
+    // Custom validation logic
+})
+```
+
+## Troubleshooting
+
+### Dependency Errors
+
+If you see dependency errors, ensure all required tools are installed:
+
+```bash
+go run . diff  # Will check and attempt to install missing dependencies
+```
+
+### Permission Issues
+
+Some operations require sudo. The tool will prompt for sudo password when needed.
+
+### State Conflicts
+
+If the state file becomes corrupted:
+
+```bash
+rm ~/.local/share/dotfiles/system-files-state.json
+go run . apply  # Rebuilds state
+```
+
+## Comparison to Other Tools
+
+| Feature             | archlinux | Ansible | NixOS |
+|---------------------|-----------|---------|-------|
+| Language            | Go        | YAML    | Nix   |
+| Type Safety         | ✓         | ✗       | ✓     |
+| Compilation         | ✓         | ✗       | ✓     |
+| Arch-Specific       | ✓         | ✗       | ✗     |
+| Requires New Distro | ✗         | ✗       | ✓     |
+| Learning Curve      | Low       | Medium  | High  |
+
+## Contributing
+
+Contributions are welcome! This framework is designed to be extended with new package managers and resource types.
+
+To add a new resource manager:
+
+1. Implement the `packageManager` interface
+2. Add it to `allManagers()` in `main.go`
+3. Create public functions for users to declare resources
+
+## Migration from Ruby Version
+
+If you're migrating from the original Ruby implementation:
+
+1. The API is very similar but uses Go syntax instead of Ruby
+2. Replace `require` statements with `import`
+3. Replace `do` blocks with `func init()` functions
+4. The command structure is the same (`apply`, `save`, `diff`)
+
+## License
+
+See the repository for license information.
+
