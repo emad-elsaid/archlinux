@@ -1,5 +1,9 @@
 # archlinux
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/emad-elsaid/archlinux.svg)](https://pkg.go.dev/github.com/emad-elsaid/archlinux)
+[![Go Report Card](https://goreportcard.com/badge/github.com/emad-elsaid/archlinux)](https://goreportcard.com/report/github.com/emad-elsaid/archlinux)
+[![License](https://img.shields.io/github/license/emad-elsaid/archlinux)](https://github.com/emad-elsaid/archlinux/blob/master/LICENSE)
+
 A declarative system configuration management framework for Arch Linux written in Go.
 
 > **Note**: This is a complete rewrite from the original Ruby implementation. The Go version provides
