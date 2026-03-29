@@ -140,7 +140,6 @@ func cmdSave(stowDir string) {
 
 	var wg sync.WaitGroup
 	for _, mgr := range allManagers() {
-		wg.Add(1)
 		wg.Go(func() {
 			checkWarn(mgr.SaveAsGo(mgr.Wanted()), "Failed to save "+mgr.ResourceName())
 		})
