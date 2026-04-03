@@ -1,4 +1,4 @@
-module github.com/emad-elsaid/archlinux
+module github.com/emad-elsaid/fest
 
 go 1.25.4
 

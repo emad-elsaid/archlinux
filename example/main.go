@@ -1,15 +1,15 @@
 package main
 
-import "github.com/emad-elsaid/archlinux"
+import "github.com/emad-elsaid/fest"
 
 func init() {
 	// System configuration
-	archlinux.Timedate("America/New_York", true)
-	archlinux.Locale("en_US.UTF-8 UTF-8")
-	archlinux.Keyboard("us", "us", "pc105", "", "ctrl:nocaps")
+	fest.Timedate("America/New_York", true)
+	fest.Locale("en_US.UTF-8 UTF-8")
+	fest.Keyboard("us", "us", "pc105", "", "ctrl:nocaps")
 
 	// Essential packages
-	archlinux.Package(
+	fest.Package(
 		"base",
 		"base-devel",
 		"linux",
@@ -19,18 +19,18 @@ func init() {
 	)
 
 	// Development tools
-	archlinux.Package(
+	fest.Package(
 		"docker",
 		"go",
 	)
 
 	// System services
-	archlinux.SystemService("docker")
+	fest.SystemService("docker")
 
 	// User groups
-	archlinux.Group("docker", "wheel")
+	fest.Group("docker", "wheel")
 }
 
 func main() {
-	archlinux.Main()
+	fest.Main()
 }

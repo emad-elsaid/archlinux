@@ -1,4 +1,4 @@
-package archlinux
+package fest
 
 import (
 	"flag"
@@ -76,9 +76,9 @@ Examples:
 
 Configuration:
     Define your system configuration by calling functions like:
-        archlinux.Package("vim", "git")
-        archlinux.Service("docker")
-        archlinux.Timedate("America/New_York", true)
+        fest.Package("vim", "git")
+        fest.Service("docker")
+        fest.Timedate("America/New_York", true)
 `)
 }
 

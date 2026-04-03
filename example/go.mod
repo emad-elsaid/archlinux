@@ -2,7 +2,7 @@ module example
 
 go 1.25.4
 
-require github.com/emad-elsaid/archlinux v0.0.0
+require github.com/emad-elsaid/fest v0.0.0-00010101000000-000000000000
 
 require (
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
@@ -17,4 +17,4 @@ require (
 	golang.org/x/text v0.22.0 // indirect
 )
 
-replace github.com/emad-elsaid/archlinux => ..
+replace github.com/emad-elsaid/fest => ../

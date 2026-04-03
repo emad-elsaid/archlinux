@@ -1,10 +1,10 @@
-// Package archlinux provides a declarative system configuration management framework for Arch Linux.
+// Package fest provides a declarative system configuration management framework for Arch Linux.
 //
 // It allows you to declare your system state (packages, services, files) and synchronizes the actual
 // system state to match. The package supports various resource types including pacman packages,
 // flatpak apps, npm packages, Go packages, Ruby gems, systemd services, user groups, system files,
 // and dotfile management via GNU Stow.
-package archlinux
+package fest
 
 import "github.com/emad-elsaid/types"
 

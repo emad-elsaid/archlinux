@@ -1,8 +1,8 @@
-# archlinux
+# Fest
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/emad-elsaid/archlinux.svg)](https://pkg.go.dev/github.com/emad-elsaid/archlinux)
-[![Go Report Card](https://goreportcard.com/badge/github.com/emad-elsaid/archlinux)](https://goreportcard.com/report/github.com/emad-elsaid/archlinux)
-[![License](https://img.shields.io/github/license/emad-elsaid/archlinux)](https://github.com/emad-elsaid/archlinux/blob/master/LICENSE)
+[![Go Reference](https://pkg.go.dev/badge/github.com/emad-elsaid/fest.svg)](https://pkg.go.dev/github.com/emad-elsaid/fest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/emad-elsaid/fest)](https://goreportcard.com/report/github.com/emad-elsaid/fest)
+[![License](https://img.shields.io/github/license/emad-elsaid/fest)](https://github.com/emad-elsaid/fest/blob/master/LICENSE)
 
 A declarative system configuration management framework for Arch Linux written in Go.
 
@@ -11,7 +11,7 @@ A declarative system configuration management framework for Arch Linux written i
 
 ## Overview
 
-`archlinux` allows you to declare your entire system state (packages, services, files, configurations) as Go code, and synchronizes your Arch Linux system to match that declared state. Think of it as a type-safe, compiled alternative to configuration management tools like Ansible or NixOS, specifically tailored for Arch Linux.
+`fest` allows you to declare your entire system state (packages, services, files, configurations) as Go code, and synchronizes your Arch Linux system to match that declared state. Think of it as a type-safe, compiled alternative to configuration management tools like Ansible or NixOS, specifically tailored for Arch Linux.
 
 ## Features
 
@@ -47,7 +47,7 @@ Before using this framework, ensure you have:
 mkdir -p ~/mysystem
 cd ~/mysystem
 go mod init mysystem
-go get github.com/emad-elsaid/archlinux
+go get github.com/emad-elsaid/fest
 ```
 
 2. Create your configuration file (e.g., `main.go`):
@@ -55,11 +55,11 @@ go get github.com/emad-elsaid/archlinux
 ```go
 package main
 
-import "github.com/emad-elsaid/archlinux"
+import "github.com/emad-elsaid/fest"
 
 func init() {
     // Declare packages
-    archlinux.Package(
+    fest.Package(
         "vim",
         "git",
         "docker",
@@ -67,15 +67,15 @@ func init() {
     )
 
     // Enable services
-    archlinux.SystemService("docker")
+    fest.SystemService("docker")
 
     // Configure system
-    archlinux.Timedate("America/New_York", true)
-    archlinux.Locale("en_US.UTF-8 UTF-8")
+    fest.Timedate("America/New_York", true)
+    fest.Locale("en_US.UTF-8 UTF-8")
 }
 
 func main() {
-    archlinux.Main()
+    fest.Main()
 }
 ```
 
@@ -116,16 +116,16 @@ go run . save
 
 ```go
 // Individual packages
-archlinux.Package("vim", "git", "docker")
+fest.Package("vim", "git", "docker")
 
 // Package groups
-archlinux.PackageGroup("base-devel")
+fest.PackageGroup("base-devel")
 ```
 
 #### Flatpak Applications
 
 ```go
-archlinux.Flatpak(
+fest.Flatpak(
     "com.slack.Slack",
     "org.mozilla.firefox",
 )
@@ -134,7 +134,7 @@ archlinux.Flatpak(
 #### NPM Packages (Global)
 
 ```go
-archlinux.NpmPackage(
+fest.NpmPackage(
     "typescript",
     "@vue/cli",
     "eslint@8.50.0",  // Version pinning
@@ -144,7 +144,7 @@ archlinux.NpmPackage(
 #### Go Packages
 
 ```go
-archlinux.GoPackage(
+fest.GoPackage(
     "github.com/golangci/golangci-lint/cmd/golangci-lint@latest",
     "golang.org/x/tools/cmd/goimports",
 )
@@ -153,7 +153,7 @@ archlinux.GoPackage(
 #### Ruby Gems
 
 ```go
-archlinux.RubyGem(
+fest.RubyGem(
     "bundler",
     "rails@7.0.0",  // Version pinning
 )
@@ -164,19 +164,19 @@ archlinux.RubyGem(
 #### Timezone and NTP
 
 ```go
-archlinux.Timedate("America/New_York", true)  // timezone, enable NTP
+fest.Timedate("America/New_York", true)  // timezone, enable NTP
 ```
 
 #### Locale
 
 ```go
-archlinux.Locale("en_US.UTF-8 UTF-8")
+fest.Locale("en_US.UTF-8 UTF-8")
 ```
 
 #### Keyboard
 
 ```go
-archlinux.Keyboard(
+fest.Keyboard(
     "us",        // keymap
     "us",        // layout
     "pc105",     // model
@@ -189,20 +189,20 @@ archlinux.Keyboard(
 
 ```go
 // System services
-archlinux.SystemService("docker", "sshd")
-archlinux.SystemTimer("fstrim")
-archlinux.SystemSocket("docker")
+fest.SystemService("docker", "sshd")
+fest.SystemTimer("fstrim")
+fest.SystemSocket("docker")
 
 // User services
-archlinux.Service("syncthing")
-archlinux.Timer("backup")
-archlinux.Socket("pipewire")
+fest.Service("syncthing")
+fest.Timer("backup")
+fest.Socket("pipewire")
 ```
 
 ### User Groups
 
 ```go
-archlinux.Group("docker", "wheel", "audio", "video")
+fest.Group("docker", "wheel", "audio", "video")
 ```
 
 ### System Files
@@ -222,7 +222,7 @@ system/
 
 ```go
 // Automatically discovers and manages files in system/
-archlinux.SystemFilesDir("system")
+fest.SystemFilesDir("system")
 ```
 
 ### Dotfiles with GNU Stow
@@ -246,12 +246,12 @@ Execute custom code before or after resource synchronization:
 
 ```go
 // Run after docker is installed
-archlinux.After(archlinux.ResourcePackages, func() {
+fest.After(fest.ResourcePackages, func() {
     // Custom setup logic
 })
 
 // Run before applying configuration
-archlinux.OnCommand(archlinux.PhaseBeforeApply, func() {
+fest.OnCommand(fest.PhaseBeforeApply, func() {
     // Pre-apply checks
 })
 ```
@@ -309,10 +309,10 @@ Each file can have `init()` functions that declare resources:
 // packages.go
 package main
 
-import "github.com/emad-elsaid/archlinux"
+import "github.com/emad-elsaid/fest"
 
 func init() {
-    archlinux.Package("vim", "git")
+    fest.Package("vim", "git")
 }
 ```
 
@@ -325,10 +325,10 @@ Use build tags or environment variables for machine-specific config:
 
 package main
 
-import "github.com/emad-elsaid/archlinux"
+import "github.com/emad-elsaid/fest"
 
 func init() {
-    archlinux.Package("docker", "kubectl")
+    fest.Package("docker", "kubectl")
 }
 ```
 
@@ -337,7 +337,7 @@ func init() {
 Add custom dependency checks:
 
 ```go
-archlinux.OnCommand(archlinux.PhaseBeforeApply, func() {
+fest.OnCommand(fest.PhaseBeforeApply, func() {
     // Custom validation logic
 })
 ```
@@ -367,7 +367,7 @@ go run . apply  # Rebuilds state
 
 ## Comparison to Other Tools
 
-| Feature             | archlinux | Ansible | NixOS |
+| Feature             | fest      | Ansible | NixOS |
 |---------------------|-----------|---------|-------|
 | Language            | Go        | YAML    | Nix   |
 | Type Safety         | ✓         | ✗       | ✓     |

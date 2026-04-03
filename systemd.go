@@ -1,4 +1,4 @@
-package archlinux
+package fest
 
 import "github.com/emad-elsaid/types"
 

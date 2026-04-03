@@ -1,4 +1,4 @@
-package archlinux
+package fest
 
 import (
 	"context"
