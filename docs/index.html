@@ -149,12 +149,99 @@
         .code-preview pre {
             color: #e8e8e8;
             line-height: 1.8;
+            margin: 0;
         }
         
-        .keyword { color: #ff79c6; }
-        .function { color: #50fa7b; }
-        .string { color: #f1fa8c; }
-        .comment { color: #6272a4; font-style: italic; }
+        .code-preview code {
+            font-family: inherit;
+        }
+        
+        /* Prism.js custom theme - remove backgrounds, dark theme colors */
+        code[class*="language-"],
+        pre[class*="language-"] {
+            color: #e8e8e8;
+            background: none;
+            text-shadow: none;
+            font-family: 'Monaco', 'Courier New', monospace;
+            text-align: left;
+            white-space: pre;
+            word-spacing: normal;
+            word-break: normal;
+            word-wrap: normal;
+            line-height: 1.8;
+            tab-size: 4;
+        }
+        
+        pre[class*="language-"] {
+            padding: 0;
+            margin: 0;
+            overflow: auto;
+        }
+        
+        :not(pre) > code[class*="language-"] {
+            background: none;
+            padding: 0;
+        }
+        
+        /* Syntax highlighting colors matching the dark theme */
+        .token.comment,
+        .token.prolog,
+        .token.doctype,
+        .token.cdata {
+            color: #6272a4;
+            font-style: italic;
+        }
+        
+        .token.punctuation {
+            color: #e8e8e8;
+        }
+        
+        .token.property,
+        .token.tag,
+        .token.constant,
+        .token.symbol,
+        .token.deleted {
+            color: #ff79c6;
+        }
+        
+        .token.boolean,
+        .token.number {
+            color: #bd93f9;
+        }
+        
+        .token.selector,
+        .token.attr-name,
+        .token.string,
+        .token.char,
+        .token.builtin,
+        .token.inserted {
+            color: #f1fa8c;
+        }
+        
+        .token.operator,
+        .token.entity,
+        .token.url,
+        .language-css .token.string,
+        .style .token.string,
+        .token.variable {
+            color: #e8e8e8;
+        }
+        
+        .token.atrule,
+        .token.attr-value,
+        .token.function,
+        .token.class-name {
+            color: #50fa7b;
+        }
+        
+        .token.keyword {
+            color: #ff79c6;
+        }
+        
+        .token.regex,
+        .token.important {
+            color: #ffb86c;
+        }
         
         section {
             padding: 6rem 2rem;
@@ -341,20 +428,18 @@
             </div>
             
             <div class="code-preview">
-                <pre><span class="keyword">package</span> main
+                <pre><code class="language-go">package main
 
-<span class="keyword">import</span> <span class="string">"github.com/emad-elsaid/fest"</span>
+import "github.com/emad-elsaid/fest"
 
-<span class="keyword">func</span> <span class="function">init</span>() {
-    <span class="comment">// Declare your entire system in Go</span>
-    fest.<span class="function">Package</span>(<span class="string">"vim"</span>, <span class="string">"git"</span>, <span class="string">"docker"</span>, <span class="string">"firefox"</span>)
-    fest.<span class="function">SystemService</span>(<span class="string">"docker"</span>)
-    fest.<span class="function">Timedate</span>(<span class="string">"America/New_York"</span>, <span class="keyword">true</span>)
-}
-
-<span class="keyword">func</span> <span class="function">main</span>() {
-    fest.<span class="function">Main</span>()  <span class="comment">// That's it. Seriously.</span>
-}</pre>
+func main() {
+    // Declare your entire system in Go
+    fest.Package("vim", "git", "docker", "firefox")
+    fest.SystemService("docker")
+    fest.Timedate("America/New_York", true)
+    
+    fest.Main()  // That's it. Seriously.
+}</code></pre>
             </div>
         </div>
     </div>
@@ -555,55 +640,53 @@
         <h2>Real-World Example</h2>
         
         <div class="code-preview">
-            <pre><span class="keyword">package</span> main
+            <pre><code class="language-go">package main
 
-<span class="keyword">import</span> <span class="string">"github.com/emad-elsaid/fest"</span>
+import "github.com/emad-elsaid/fest"
 
-<span class="keyword">func</span> <span class="function">init</span>() {
-    <span class="comment">// Base system packages</span>
-    fest.<span class="function">Package</span>(
-        <span class="string">"base-devel"</span>, <span class="string">"vim"</span>, <span class="string">"git"</span>, <span class="string">"htop"</span>,
-        <span class="string">"docker"</span>, <span class="string">"kubectl"</span>, <span class="string">"terraform"</span>,
+func main() {
+    // Base system packages
+    fest.Package(
+        "base-devel", "vim", "git", "htop",
+        "docker", "kubectl", "terraform",
     )
     
-    <span class="comment">// Development tools</span>
-    fest.<span class="function">GoPackage</span>(
-        <span class="string">"github.com/golangci/golangci-lint/cmd/golangci-lint@latest"</span>,
+    // Development tools
+    fest.GoPackage(
+        "github.com/golangci/golangci-lint/cmd/golangci-lint@latest",
     )
     
-    fest.<span class="function">NpmPackage</span>(
-        <span class="string">"typescript"</span>, <span class="string">"@vue/cli"</span>, <span class="string">"eslint"</span>,
+    fest.NpmPackage(
+        "typescript", "@vue/cli", "eslint",
     )
     
-    <span class="comment">// Flatpak apps</span>
-    fest.<span class="function">Flatpak</span>(
-        <span class="string">"com.slack.Slack"</span>,
-        <span class="string">"us.zoom.Zoom"</span>,
+    // Flatpak apps
+    fest.Flatpak(
+        "com.slack.Slack",
+        "us.zoom.Zoom",
     )
     
-    <span class="comment">// System configuration</span>
-    fest.<span class="function">Timedate</span>(<span class="string">"America/New_York"</span>, <span class="keyword">true</span>)
-    fest.<span class="function">Locale</span>(<span class="string">"en_US.UTF-8 UTF-8"</span>)
+    // System configuration
+    fest.Timedate("America/New_York", true)
+    fest.Locale("en_US.UTF-8 UTF-8")
     
-    <span class="comment">// Services</span>
-    fest.<span class="function">SystemService</span>(<span class="string">"docker"</span>, <span class="string">"sshd"</span>)
-    fest.<span class="function">Service</span>(<span class="string">"syncthing"</span>)
+    // Services
+    fest.SystemService("docker", "sshd")
+    fest.Service("syncthing")
     
-    <span class="comment">// User groups</span>
-    fest.<span class="function">Group</span>(<span class="string">"docker"</span>, <span class="string">"wheel"</span>, <span class="string">"audio"</span>)
+    // User groups
+    fest.Group("docker", "wheel", "audio")
     
-    <span class="comment">// System files (from system/ directory)</span>
-    fest.<span class="function">SystemFilesDir</span>(<span class="string">"system"</span>)
+    // System files (from system/ directory)
+    fest.SystemFilesDir("system")
     
-    <span class="comment">// Custom hook: notify after docker install</span>
-    fest.<span class="function">After</span>(fest.ResourcePackages, <span class="keyword">func</span>() {
-        <span class="comment">// Your custom setup logic here</span>
+    // Custom hook: notify after docker install
+    fest.After(fest.ResourcePackages, func() {
+        // Your custom setup logic here
     })
-}
-
-<span class="keyword">func</span> <span class="function">main</span>() {
-    fest.<span class="function">Main</span>()
-}</pre>
+    
+    fest.Main()
+}</code></pre>
         </div>
         
         <div class="highlight-box">
@@ -616,21 +699,21 @@
         <h2>Install Fest in 60 Seconds</h2>
         
         <div class="code-preview">
-            <pre><span class="comment"># 1. Create your system configuration</span>
+            <pre><code class="language-bash"># 1. Create your system configuration
 mkdir ~/mysystem && cd ~/mysystem
 go mod init mysystem
 go get github.com/emad-elsaid/fest
 
-<span class="comment"># 2. Create main.go (see examples above)</span>
+# 2. Create main.go (see examples above)
 
-<span class="comment"># 3. Preview what would change</span>
+# 3. Preview what would change
 go run . diff
 
-<span class="comment"># 4. Apply your configuration</span>
+# 4. Apply your configuration
 go run . apply
 
-<span class="comment"># 5. Commit to git and deploy anywhere</span>
-git init && git add . && git commit -m "Initial system config"</pre>
+# 5. Commit to git and deploy anywhere
+git init && git add . && git commit -m "Initial system config"</code></pre>
         </div>
         
         <div class="cta-buttons" style="justify-content: center;">
@@ -647,5 +730,9 @@ git init && git add . && git commit -m "Initial system config"</pre>
             <a href="https://github.com/emad-elsaid/fest/blob/master/LICENSE" style="color: var(--arch-blue); text-decoration: none;">License</a>
         </p>
     </footer>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 </body>
 </html>
