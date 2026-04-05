@@ -1,0 +1,67 @@
+package build
+
+import (
+	"errors"
+	"strings"
+
+	"github.com/leonelquinteros/gotext"
+)
+
+var ErrInstallRepoPkgs = errors.New(gotext.Get("error installing repo packages"))
+
+type FailedIgnoredPkgError struct {
+	pkgErrors map[string]error
+}
+
+func (e *FailedIgnoredPkgError) Error() string {
+	var sb strings.Builder
+	sb.WriteString(gotext.Get("Failed to install the following packages. Manual intervention is required:"))
+
+	for pkg, err := range e.pkgErrors {
+		sb.WriteString("\n")
+		sb.WriteString(pkg)
+		sb.WriteString(" - ")
+		sb.WriteString(err.Error())
+	}
+
+	return sb.String()
+}
+
+type PkgDestNotInListError struct {
+	name string
+}
+
+func (e *PkgDestNotInListError) Error() string {
+	return gotext.Get("could not find PKGDEST for: %s", e.name)
+}
+
+type FindPkgDestError struct {
+	name, pkgDest string
+}
+
+func (e *FindPkgDestError) Error() string {
+	return gotext.Get(
+		"the PKGDEST for %s is listed by makepkg but does not exist: %s",
+		e.name, e.pkgDest)
+}
+
+type SetPkgReasonError struct {
+	exp bool // explicit
+}
+
+func (e *SetPkgReasonError) Error() string {
+	reason := gotext.Get("explicit")
+	if !e.exp {
+		reason = gotext.Get("dependency")
+	}
+
+	return gotext.Get("error updating package install reason to %s", reason)
+}
+
+type NoPkgDestsFoundError struct {
+	dir string
+}
+
+func (e *NoPkgDestsFoundError) Error() string {
+	return gotext.Get("could not find any package archives listed in %s", e.dir)
+}

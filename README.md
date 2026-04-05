@@ -16,7 +16,7 @@ A declarative system configuration management framework for Arch Linux written i
 ## Features
 
 - **Declarative Configuration**: Define what you want, not how to get it
-- **Package Management**: Manages pacman packages (including AUR via yay)
+- **Package Management**: Manages pacman packages (including AUR via embedded yay)
 - **Multiple Package Managers**: Support for Flatpak, npm, Go packages, Ruby gems
 - **System Configuration**: Timezone, locale, keyboard settings
 - **Systemd Services**: Enable/disable system and user services, timers, and sockets
@@ -36,8 +36,9 @@ Before using this framework, ensure you have:
 
 1. Arch Linux system
 2. Go 1.25+ installed
-3. `yay` AUR helper installed (see [yay installation](https://github.com/Jguer/yay#installation))
-4. `stow` for dotfile management
+3. `stow` for dotfile management
+
+**Note**: This project includes an embedded copy of [yay](https://github.com/Jguer/yay) for AUR package management. No separate yay installation is required.
 
 ### Quick Start
 
@@ -397,5 +398,7 @@ If you're migrating from the original Ruby implementation:
 
 ## License
 
-See the repository for license information.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+This project incorporates code from [yay](https://github.com/Jguer/yay) which is also licensed under GPL v3.
 

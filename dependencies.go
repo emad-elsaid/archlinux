@@ -1,11 +1,13 @@
 package fest
 
-import "github.com/emad-elsaid/types"
-
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"strings"
+
+	"github.com/emad-elsaid/fest/yay"
+	"github.com/emad-elsaid/types"
 )
 
 // dependency represents a system tool dependency required for the framework to function.
@@ -28,7 +30,6 @@ func (d dependency) pkg() string {
 var dependencies = []dependency{
 	// Core package management (critical)
 	{Name: "pacman", Required: true},
-	{Name: "yay", PackageName: "yay", Required: true},
 	{Name: "expac", PackageName: "expac", Required: true},
 
 	// Build tools (critical for this program)
@@ -150,34 +151,20 @@ func installDependencies(deps []dependency) error {
 	}
 
 	if len(aurPkgs) > 0 {
-		if !isInstalled(dependency{Name: "yay"}) {
-			return fmt.Errorf("yay required for AUR packages: %s", strings.Join(aurPkgs, ", "))
-		}
 		slog.Info("Installing from AUR", "packages", strings.Join(aurPkgs, ", "))
-		if err := types.Cmd("yay", append([]string{"-S", "--needed", "--noconfirm"}, aurPkgs...)...).Interactive().Error(); err != nil {
-			return fmt.Errorf("yay install failed: %w", err)
+		client, err := yay.NewClient("needed", "noconfirm")
+		if err != nil {
+			return fmt.Errorf("failed to initialize yay: %w", err)
+		}
+		defer client.Close()
+
+		ctx := context.Background()
+		if err := client.Install(ctx, aurPkgs); err != nil {
+			return fmt.Errorf("AUR install failed: %w", err)
 		}
 	}
 
 	return nil
-}
-
-// installYay provides instructions for installing yay AUR helper if not present.
-// This is a special case since yay itself might need to be bootstrapped.
-func installYay() error {
-	if isInstalled(dependency{Name: "yay"}) {
-		slog.Debug("yay is already installed")
-		return nil
-	}
-
-	slog.Info("yay not found, installing from AUR...")
-	slog.Info("This requires manual bootstrapping. Please install yay manually:")
-	slog.Info("  pacman -S --needed git base-devel")
-	slog.Info("  git clone https://aur.archlinux.org/yay.git")
-	slog.Info("  cd yay")
-	slog.Info("  makepkg -si")
-
-	return fmt.Errorf("yay is not installed and must be installed manually before running this tool")
 }
 
 // listDependencies prints information about all dependencies and their installation status.

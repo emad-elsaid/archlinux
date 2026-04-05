@@ -4,10 +4,12 @@ import "github.com/emad-elsaid/types"
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"log/slog"
 	"strings"
 
+	"github.com/emad-elsaid/fest/yay"
 	"github.com/samber/lo"
 )
 
@@ -48,7 +50,9 @@ func PackageGroup(groupNames ...string) {
 	}
 }
 
-type pacman struct{}
+type pacman struct {
+	yayClient *yay.Client
+}
 
 func (p pacman) Wanted() []string { return packages }
 
@@ -72,7 +76,18 @@ func (p pacman) ListExplicit() ([]string, error) {
 }
 
 func (p pacman) Install(pkgs []string) error {
-	return types.Cmd("yay", append([]string{"-S", "--needed"}, pkgs...)...).Interactive().Error()
+	// Initialize yay client if not already done
+	if p.yayClient == nil {
+		client, err := yay.NewClient("needed", "noconfirm")
+		if err != nil {
+			return fmt.Errorf("failed to initialize yay: %w", err)
+		}
+		defer client.Close()
+		p.yayClient = client
+	}
+
+	ctx := context.Background()
+	return p.yayClient.Install(ctx, pkgs)
 }
 
 func (p pacman) Uninstall(pkgs []string) error {

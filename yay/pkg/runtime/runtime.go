@@ -1,0 +1,148 @@
+package runtime
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/leonelquinteros/gotext"
+
+	"github.com/emad-elsaid/fest/yay/pkg/query"
+	"github.com/emad-elsaid/fest/yay/pkg/settings"
+	"github.com/emad-elsaid/fest/yay/pkg/settings/exe"
+	"github.com/emad-elsaid/fest/yay/pkg/settings/parser"
+	"github.com/emad-elsaid/fest/yay/pkg/text"
+	"github.com/emad-elsaid/fest/yay/pkg/vcs"
+
+	"github.com/Jguer/aur"
+	"github.com/Jguer/aur/metadata"
+	"github.com/Jguer/aur/rpc"
+	"github.com/Jguer/votar/pkg/vote"
+	"github.com/Morganamilo/go-pacmanconf"
+
+	"golang.org/x/net/proxy"
+)
+
+type Runtime struct {
+	Cfg          *settings.Configuration
+	QueryBuilder query.Builder
+	PacmanConf   *pacmanconf.Config
+	VCSStore     vcs.Store
+	CmdBuilder   exe.ICmdBuilder
+	HTTPClient   *http.Client
+	VoteClient   *vote.Client
+	AURClient    aur.QueryClient
+	Logger       *text.Logger
+}
+
+func NewRuntime(cfg *settings.Configuration, cmdArgs *parser.Arguments, version string) (*Runtime, error) {
+	logger := text.NewLogger(os.Stdout, os.Stderr, os.Stdin, cfg.Debug, "runtime")
+	runner := exe.NewOSRunner(logger.Child("runner"))
+
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.IdleConnTimeout = 90 * time.Second
+	transport.TLSHandshakeTimeout = 30 * time.Second
+	transport.ResponseHeaderTimeout = 30 * time.Second
+	transport.MaxIdleConns = 100
+	transport.MaxIdleConnsPerHost = 10
+
+	if socks5Proxy := os.Getenv("SOCKS5_PROXY"); socks5Proxy != "" {
+		dialer, err := proxy.SOCKS5("tcp", socks5Proxy, nil, proxy.Direct)
+		if err != nil {
+			return nil, err
+		}
+
+		contextDialer, ok := dialer.(proxy.ContextDialer)
+		if !ok {
+			return nil, fmt.Errorf("SOCKS5 dialer does not support DialContext")
+		}
+		transport.DialContext = contextDialer.DialContext
+	}
+
+	httpClient := &http.Client{
+		Timeout:   30 * time.Second,
+		Transport: transport,
+	}
+
+	userAgent := fmt.Sprintf("Yay/%s", version)
+	voteClient, errVote := vote.NewClient(vote.WithUserAgent(userAgent),
+		vote.WithHTTPClient(httpClient))
+	if errVote != nil {
+		return nil, errVote
+	}
+
+	voteClient.SetCredentials(
+		os.Getenv("AUR_USERNAME"),
+		os.Getenv("AUR_PASSWORD"))
+
+	userAgentFn := func(ctx context.Context, req *http.Request) error {
+		req.Header.Set("User-Agent", userAgent)
+		return nil
+	}
+
+	var aurCache aur.QueryClient
+	aurCache, errAURCache := metadata.New(
+		metadata.WithHTTPClient(httpClient),
+		metadata.WithCacheFilePath(filepath.Join(cfg.BuildDir, "aur.json")),
+		metadata.WithRequestEditorFn(userAgentFn),
+		metadata.WithBaseURL(cfg.AURURL),
+		metadata.WithDebugLogger(logger.Debugln),
+	)
+	if errAURCache != nil {
+		return nil, fmt.Errorf(gotext.Get("failed to retrieve aur Cache")+": %w", errAURCache)
+	}
+
+	aurClient, errAUR := rpc.NewClient(
+		rpc.WithHTTPClient(httpClient),
+		rpc.WithBaseURL(cfg.AURRPCURL),
+		rpc.WithRequestEditorFn(userAgentFn),
+		rpc.WithLogFn(logger.Debugln))
+	if errAUR != nil {
+		return nil, errAUR
+	}
+
+	if cfg.UseRPC {
+		aurCache = aurClient
+	}
+
+	pacmanConf, useColor, err := retrievePacmanConfig(cmdArgs, cfg.PacmanConf)
+	if err != nil {
+		return nil, err
+	}
+
+	// FIXME: get rid of global
+	text.UseColor = useColor
+
+	cmdBuilder := exe.NewCmdBuilder(cfg, runner, logger.Child("cmdbuilder"), pacmanConf.DBPath)
+
+	vcsStore := vcs.NewInfoStore(
+		cfg.VCSFilePath, cmdBuilder,
+		logger.Child("vcs"))
+
+	if err := vcsStore.Load(); err != nil {
+		return nil, err
+	}
+
+	queryBuilder := query.NewSourceQueryBuilder(
+		aurClient,
+		logger.Child("mixed.querybuilder"), cfg.SortBy,
+		cfg.Mode, cfg.SearchBy,
+		cfg.BottomUp, cfg.SingleLineResults, cfg.SeparateSources)
+
+	run := &Runtime{
+		Cfg:          cfg,
+		QueryBuilder: queryBuilder,
+		PacmanConf:   pacmanConf,
+		VCSStore:     vcsStore,
+		CmdBuilder:   cmdBuilder,
+		HTTPClient:   httpClient,
+		VoteClient:   voteClient,
+		AURClient:    aurCache,
+		Logger:       logger,
+	}
+
+	return run, nil
+}

@@ -1,0 +1,75 @@
+package yay
+
+import (
+	"context"
+	"sync"
+
+	"github.com/Jguer/aur"
+	"github.com/leonelquinteros/gotext"
+
+	"github.com/emad-elsaid/fest/yay/pkg/db"
+	"github.com/emad-elsaid/fest/yay/pkg/dep"
+	"github.com/emad-elsaid/fest/yay/pkg/runtime"
+	"github.com/emad-elsaid/fest/yay/pkg/sync/srcinfo"
+	"github.com/emad-elsaid/fest/yay/pkg/sync/workdir"
+)
+
+func infoToInstallInfo(info []aur.Pkg) []map[string]*dep.InstallInfo {
+	installInfo := make([]map[string]*dep.InstallInfo, 1)
+	installInfo[0] = map[string]*dep.InstallInfo{}
+
+	for i := range info {
+		pkg := &info[i]
+		installInfo[0][pkg.Name] = &dep.InstallInfo{
+			AURBase: &pkg.PackageBase,
+			Source:  dep.AUR,
+		}
+	}
+
+	return installInfo
+}
+
+// createDevelDB forces yay to create a DB of the existing development packages.
+func createDevelDB(ctx context.Context, run *runtime.Runtime, dbExecutor db.Executor) error {
+	remoteNames := dbExecutor.InstalledRemotePackageNames()
+
+	run.QueryBuilder.Execute(ctx, dbExecutor, remoteNames)
+	info, err := run.AURClient.Get(ctx, &aur.Query{
+		Needles:  remoteNames,
+		By:       aur.Name,
+		Contains: false,
+	})
+	if err != nil {
+		return err
+	}
+
+	preper := workdir.NewPreparerWithoutHooks(dbExecutor, run.CmdBuilder, run.Cfg, run.Logger.Child("workdir"), false)
+
+	mapInfo := infoToInstallInfo(info)
+	pkgBuildDirsByBase, err := preper.Run(ctx, run, mapInfo)
+	if err != nil {
+		return err
+	}
+
+	srcinfos, err := srcinfo.ParseSrcinfoFilesByBase(run.Logger.Child("srcinfo"), pkgBuildDirsByBase, false)
+	if err != nil {
+		return err
+	}
+
+	var wg sync.WaitGroup
+	for i := range srcinfos {
+		for iP := range srcinfos[i].Packages {
+			wg.Add(1)
+
+			go func(baseIndex string, packageIndex int) {
+				run.VCSStore.Update(ctx, srcinfos[baseIndex].Packages[packageIndex].Pkgname, srcinfos[baseIndex].Source)
+				wg.Done()
+			}(i, iP)
+		}
+	}
+
+	wg.Wait()
+	run.Logger.OperationInfoln(gotext.Get("GenDB finished. No packages were installed"))
+
+	return nil
+}
