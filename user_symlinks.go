@@ -1,7 +1,5 @@
 package fest
 
-import "github.com/emad-elsaid/types"
-
 import (
 	"errors"
 	"log/slog"
@@ -9,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/emad-elsaid/types"
 	"github.com/samber/lo"
 )
 
@@ -35,7 +34,6 @@ var ignoredDirs = []string{
 	".wine",
 	"vendor",
 	"__pycache__",
-	".local/share",
 	".local/state",
 	".var",
 	".thunderbird",
