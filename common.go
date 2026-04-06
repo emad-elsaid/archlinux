@@ -6,13 +6,12 @@
 // and dotfile management via GNU Stow.
 package fest
 
-import "github.com/emad-elsaid/types"
-
 import (
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/emad-elsaid/types"
 	"github.com/manifoldco/promptui"
 	"github.com/samber/lo"
 )
@@ -112,7 +111,7 @@ func matchWithVersion(want, have string, splitFn func(string) (string, string)) 
 // This is used during the "save" operation to persist system state as declarative Go code.
 func saveAsGoFile(filename, funcName string, items []string) error {
 	var b strings.Builder
-	fmt.Fprintf(&b, "package main\n\nimport \"github.com/emad-elsaid/archlinux\"\n\n")
+	fmt.Fprintf(&b, "package main\n\nimport \"github.com/emad-elsaid/fest\"\n\n")
 	fmt.Fprintf(&b, "func init() {\n\tarchlinux.%s(\n", funcName)
 	for _, item := range items {
 		fmt.Fprintf(&b, "\t\t%q,\n", item)
