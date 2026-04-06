@@ -220,7 +220,7 @@ func (g goPackages) SaveAsGo(wanted []string) error {
 //
 // Example:
 //
-//	archlinux.GoPackage(
+//	fest.GoPackage(
 //	    "github.com/golangci/golangci-lint/cmd/golangci-lint@latest",
 //	    "golang.org/x/tools/cmd/goimports@v0.15.0",
 //	)

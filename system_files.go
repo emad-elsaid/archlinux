@@ -25,8 +25,8 @@ var (
 //
 // Example:
 //
-//	archlinux.SystemFilesDir("system")  // Default
-//	archlinux.SystemFilesDir("custom-system-files")  // Additional directory
+//	fest.SystemFilesDir("system")  // Default
+//	fest.SystemFilesDir("custom-system-files")  // Additional directory
 func SystemFilesDir(dir string) {
 	systemFilesDirs = append(systemFilesDirs, dir)
 }

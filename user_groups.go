@@ -20,7 +20,7 @@ var groups []string
 //
 // Example:
 //
-//	archlinux.Group("docker", "wheel", "audio", "video")
+//	fest.Group("docker", "wheel", "audio", "video")
 func Group(grps ...string) { addUnique(&groups, grps...) }
 
 type userGroups struct{}

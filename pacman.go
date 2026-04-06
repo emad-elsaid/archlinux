@@ -23,7 +23,7 @@ var packages []string
 //
 // Example:
 //
-//	archlinux.Package("vim", "git", "docker")
+//	fest.Package("vim", "git", "docker")
 func Package(pkgs ...string) { addUnique(&packages, pkgs...) }
 
 // PackageGroup expands pacman package groups into individual packages.
@@ -31,7 +31,7 @@ func Package(pkgs ...string) { addUnique(&packages, pkgs...) }
 //
 // Example:
 //
-//	archlinux.PackageGroup("base-devel")
+//	fest.PackageGroup("base-devel")
 func PackageGroup(groupNames ...string) {
 	for _, groupName := range groupNames {
 		stdout, err := types.Cmd("pacman", "-Sg", groupName).StdoutErr()

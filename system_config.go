@@ -32,7 +32,7 @@ var systemConfig = systemConfigType{}
 //
 // Example:
 //
-//	archlinux.Timedate("America/New_York", true)  // Set timezone and enable NTP
+//	fest.Timedate("America/New_York", true)  // Set timezone and enable NTP
 func Timedate(timezone string, ntp bool) {
 	systemConfig.Timezone = timezone
 	systemConfig.NTP = ntp
@@ -43,7 +43,7 @@ func Timedate(timezone string, ntp bool) {
 //
 // Example:
 //
-//	archlinux.Locale("en_US.UTF-8 UTF-8")
+//	fest.Locale("en_US.UTF-8 UTF-8")
 func Locale(locale string) {
 	systemConfig.Locale = locale
 }
@@ -58,7 +58,7 @@ func Locale(locale string) {
 //
 // Example:
 //
-//	archlinux.Keyboard("us", "us", "pc105", "", "ctrl:nocaps")
+//	fest.Keyboard("us", "us", "pc105", "", "ctrl:nocaps")
 func Keyboard(keymap, layout, model, variant, options string) {
 	systemConfig.Keymap = keymap
 	systemConfig.Layout = layout

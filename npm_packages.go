@@ -18,7 +18,7 @@ var wantedNpmPackages []string
 //
 // Example:
 //
-//	archlinux.NpmPackage(
+//	fest.NpmPackage(
 //	    "typescript",
 //	    "@vue/cli",
 //	    "eslint@8.50.0",  // Pin to specific version

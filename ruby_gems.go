@@ -21,7 +21,7 @@ var wantedRubyGems []string
 //
 // Example:
 //
-//	archlinux.RubyGem(
+//	fest.RubyGem(
 //	    "bundler",
 //	    "rails@7.0.0",
 //	    "puma@~>5.0",

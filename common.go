@@ -112,7 +112,7 @@ func matchWithVersion(want, have string, splitFn func(string) (string, string)) 
 func saveAsGoFile(filename, funcName string, items []string) error {
 	var b strings.Builder
 	fmt.Fprintf(&b, "package main\n\nimport \"github.com/emad-elsaid/fest\"\n\n")
-	fmt.Fprintf(&b, "func init() {\n\tarchlinux.%s(\n", funcName)
+	fmt.Fprintf(&b, "func init() {\n\tfest.%s(\n", funcName)
 	for _, item := range items {
 		fmt.Fprintf(&b, "\t\t%q,\n", item)
 	}

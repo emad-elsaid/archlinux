@@ -27,21 +27,21 @@ var (
 //
 // Example:
 //
-//	archlinux.SystemService("docker", "sshd")
+//	fest.SystemService("docker", "sshd")
 func SystemService(svcs ...string) { addUnique(&systemServices, svcs...) }
 
 // SystemTimer declares system-level systemd timers to enable.
 //
 // Example:
 //
-//	archlinux.SystemTimer("fstrim")
+//	fest.SystemTimer("fstrim")
 func SystemTimer(tmrs ...string) { addUnique(&systemTimers, tmrs...) }
 
 // SystemSocket declares system-level systemd sockets to enable.
 //
 // Example:
 //
-//	archlinux.SystemSocket("docker")
+//	fest.SystemSocket("docker")
 func SystemSocket(socks ...string) { addUnique(&systemSockets, socks...) }
 
 // Service declares user-level systemd services to enable.
@@ -49,21 +49,21 @@ func SystemSocket(socks ...string) { addUnique(&systemSockets, socks...) }
 //
 // Example:
 //
-//	archlinux.Service("syncthing", "ssh-agent")
+//	fest.Service("syncthing", "ssh-agent")
 func Service(svcs ...string) { addUnique(&services, svcs...) }
 
 // Timer declares user-level systemd timers to enable.
 //
 // Example:
 //
-//	archlinux.Timer("backup")
+//	fest.Timer("backup")
 func Timer(tmrs ...string) { addUnique(&timers, tmrs...) }
 
 // Socket declares user-level systemd sockets to enable.
 //
 // Example:
 //
-//	archlinux.Socket("pipewire")
+//	fest.Socket("pipewire")
 func Socket(socks ...string) { addUnique(&sockets, socks...) }
 
 type systemdManager struct {

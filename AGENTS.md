@@ -175,7 +175,7 @@ For versioned resources (npm, go packages):
 ## Notes for Agents
 - This is a library + CLI tool meant to be imported by user's Go program
 - Users define configuration in `init()` functions
-- Users call `archlinux.Main()` from their `main()` function
+- Users call `fest.Main()` from their `main()` function
 - The framework operates in phases: diff (preview) → apply (sync)
 - State is tracked to enable cleanup of unwanted resources
 - Dependencies are respected - won't remove packages that others depend on
