@@ -86,7 +86,14 @@ func splitVer(pkg string) (name, ver string) {
 func splitNpmVer(pkg string) (name, ver string) {
 	searchStart := 0
 	if strings.HasPrefix(pkg, "@") {
-		searchStart = 1
+		// For scoped packages, find the slash first, then search for @ after it
+		slashIdx := strings.Index(pkg, "/")
+		if slashIdx != -1 {
+			searchStart = slashIdx + 1
+		} else {
+			// Malformed scoped package (no slash) - treat as regular
+			searchStart = 1
+		}
 	}
 	if idx := strings.Index(pkg[searchStart:], "@"); idx != -1 {
 		actualIdx := searchStart + idx

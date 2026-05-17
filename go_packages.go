@@ -65,7 +65,7 @@ func (g goPackages) getBinaryModule(binPath string) (string, error) {
 		}
 	}
 
-	if path == "" || !strings.Contains(path, "/") {
+	if path == "" {
 		return "", fmt.Errorf("no valid module path found")
 	}
 
@@ -185,7 +185,6 @@ func (g goPackages) Uninstall(pkgs []string) error {
 				if err := os.Remove(binPath); err != nil && !os.IsNotExist(err) {
 					return err
 				}
-				break
 			}
 		}
 	}

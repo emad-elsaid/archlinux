@@ -58,17 +58,60 @@ func (r rubyGems) Match(want, have string) bool {
 }
 
 func (r rubyGems) matchPessimistic(want, have string) bool {
-	wantParts := strings.Split(strings.TrimSpace(want), ".")
-	haveParts := strings.Split(have, ".")
-	if len(haveParts) < len(wantParts) {
+	want = strings.TrimSpace(want)
+	
+	// Check lower bound: have >= want
+	if r.compareVer(have, want) < 0 {
 		return false
 	}
-	for i := 0; i < len(wantParts)-1; i++ {
-		if haveParts[i] != wantParts[i] {
-			return false
+	
+	// Calculate upper bound by incrementing component before last
+	// ~>1.2 means >= 1.2, < 2.0
+	// ~>1.2.3 means >= 1.2.3, < 1.3.0
+	// ~>5 means >= 5.0, < 6.0
+	wantParts := strings.Split(want, ".")
+	upperParts := make([]string, len(wantParts))
+	copy(upperParts, wantParts)
+	
+	// Increment the component before the last one (or the only one for single component)
+	incrementIdx := len(wantParts) - 1
+	if len(wantParts) > 1 {
+		incrementIdx = len(wantParts) - 2
+	}
+	
+	// Parse the component as integer, increment, convert back
+	var num int
+	for _, c := range upperParts[incrementIdx] {
+		if c >= '0' && c <= '9' {
+			num = num*10 + int(c-'0')
+		} else {
+			break
 		}
 	}
-	return r.compareVer(have, strings.TrimSpace(want)) >= 0
+	num++
+	
+	// Format number back to string
+	numStr := ""
+	if num == 0 {
+		numStr = "0"
+	} else {
+		temp := num
+		for temp > 0 {
+			numStr = string(rune('0'+temp%10)) + numStr
+			temp /= 10
+		}
+	}
+	upperParts[incrementIdx] = numStr
+	
+	// Set all components after incrementIdx to 0
+	for i := incrementIdx + 1; i < len(upperParts); i++ {
+		upperParts[i] = "0"
+	}
+	
+	upperBound := strings.Join(upperParts, ".")
+	
+	// Check upper bound: have < upperBound
+	return r.compareVer(have, upperBound) < 0
 }
 
 func (r rubyGems) compareVer(v1, v2 string) int {

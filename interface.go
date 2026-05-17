@@ -3,6 +3,7 @@ package fest
 import (
 	"fmt"
 	"log/slog"
+	"sync"
 
 	"github.com/samber/lo"
 )
@@ -53,6 +54,7 @@ type Callback func()
 
 // callbacks stores Before and After callbacks for each package manager resource.
 var callbacks = struct {
+	sync.RWMutex
 	before map[string][]Callback
 	after  map[string][]Callback
 }{
@@ -62,11 +64,15 @@ var callbacks = struct {
 
 // Before registers a callback to be executed before the given resource name is synced.
 func Before(resourceName ResourceName, callback Callback) {
+	callbacks.Lock()
+	defer callbacks.Unlock()
 	callbacks.before[string(resourceName)] = append(callbacks.before[string(resourceName)], callback)
 }
 
 // After registers a callback to be executed after the given resource name is synced.
 func After(resourceName ResourceName, callback Callback) {
+	callbacks.Lock()
+	defer callbacks.Unlock()
 	callbacks.after[string(resourceName)] = append(callbacks.after[string(resourceName)], callback)
 }
 
@@ -88,16 +94,24 @@ const (
 )
 
 // commandCallbacks stores callbacks for command lifecycle phases.
-var commandCallbacks = make(map[CommandPhase][]Callback)
+var (
+	commandCallbacks   = make(map[CommandPhase][]Callback)
+	commandCallbacksMu sync.RWMutex
+)
 
 // OnCommand registers a callback to be executed during the given command phase.
 func OnCommand(phase CommandPhase, callback Callback) {
+	commandCallbacksMu.Lock()
+	defer commandCallbacksMu.Unlock()
 	commandCallbacks[phase] = append(commandCallbacks[phase], callback)
 }
 
 // executeCommandCallbacks runs all callbacks for a given command phase.
 func executeCommandCallbacks(phase CommandPhase) {
+	commandCallbacksMu.RLock()
 	callbacks := commandCallbacks[phase]
+	commandCallbacksMu.RUnlock()
+
 	if len(callbacks) == 0 {
 		return
 	}
@@ -128,7 +142,16 @@ func executeCallbacks(resourceName string, callbackMap map[string][]Callback, wh
 
 	for i, cb := range cbs {
 		slog.Debug(fmt.Sprintf("Executing callbacks %s %s manager (%d/%d)", when, resourceName, i+1, len(cbs)))
-		cb()
+
+		// Recover from panics to prevent one handler from breaking others
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					slog.Warn(fmt.Sprintf("Callback %d panicked %s %s: %v", i+1, when, resourceName, r))
+				}
+			}()
+			cb()
+		}()
 	}
 
 	return nil
@@ -164,7 +187,10 @@ func syncPackages(pm packageManager, wanted []string) error {
 	if err != nil {
 		return err
 	}
-	installed, _ = pm.ListInstalled() // refresh after install
+	installed, err = pm.ListInstalled() // refresh after install
+	if err != nil {
+		return err
+	}
 	keep := getKeepPackages(wanted, deps)
 	var toUninstall []string
 	for _, installedPkg := range installed {

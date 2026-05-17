@@ -1,11 +1,12 @@
 package fest
 
-import "github.com/emad-elsaid/types"
-
 import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strings"
+
+	"github.com/emad-elsaid/types"
 )
 
 const ResourceNpmPackages ResourceName = "npm packages"
@@ -23,7 +24,16 @@ var wantedNpmPackages []string
 //	    "@vue/cli",
 //	    "eslint@8.50.0",  // Pin to specific version
 //	)
-func NpmPackage(pkgs ...string) { addUnique(&wantedNpmPackages, pkgs...) }
+func NpmPackage(pkgs ...string) {
+	// Validate and filter out empty/whitespace-only packages
+	valid := make([]string, 0, len(pkgs))
+	for _, pkg := range pkgs {
+		if strings.TrimSpace(pkg) != "" {
+			valid = append(valid, pkg)
+		}
+	}
+	addUnique(&wantedNpmPackages, valid...)
+}
 
 type npmPackages struct{}
 
@@ -31,7 +41,13 @@ func (n npmPackages) Wanted() []string     { return wantedNpmPackages }
 func (n npmPackages) ResourceName() string { return string(ResourceNpmPackages) }
 
 func (n npmPackages) Match(want, have string) bool {
-	return matchWithVersion(want, have, splitNpmVer)
+	wantName, wantVer := splitNpmVer(want)
+	haveName, haveVer := splitNpmVer(have)
+	if wantName != haveName {
+		return false
+	}
+	// Don't trim whitespace from versions - they indicate malformed input
+	return wantVer == "" || wantVer == "latest" || haveVer == "" || haveVer == "latest" || wantVer == haveVer
 }
 
 type npmListOutput struct {
@@ -78,6 +94,11 @@ func (n npmPackages) Install(pkgs []string) error {
 	}
 
 	for _, pkg := range pkgs {
+		// Validate package name is not empty/whitespace
+		if strings.TrimSpace(pkg) == "" {
+			return fmt.Errorf("invalid npm package: empty or whitespace-only name")
+		}
+
 		installPkg := pkg
 		if _, ver := splitNpmVer(pkg); ver == "" {
 			installPkg = pkg + "@latest"
@@ -97,6 +118,11 @@ func (n npmPackages) Uninstall(pkgs []string) error {
 	}
 
 	for _, pkg := range pkgs {
+		// Validate package name is not empty/whitespace
+		if strings.TrimSpace(pkg) == "" {
+			return fmt.Errorf("invalid npm package: empty or whitespace-only name")
+		}
+
 		pkgName, _ := splitNpmVer(pkg)
 
 		slog.Info("Uninstalling npm package", "package", pkgName)

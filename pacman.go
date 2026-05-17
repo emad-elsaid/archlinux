@@ -37,7 +37,7 @@ func PackageGroup(groupNames ...string) {
 		stdout, err := types.Cmd("pacman", "-Sg", groupName).StdoutErr()
 		if err != nil {
 			slog.Warn("failed to query pacman groups", "error", err, "group", groupName)
-			return
+			continue // Continue with next group instead of returning early
 		}
 
 		for line := range strings.SplitSeq(strings.TrimSpace(stdout), "\n") {
@@ -130,8 +130,16 @@ func (p pacman) GetDependencies() (map[string][]string, error) {
 	// Resolve virtual packages to real packages
 	resolved := make(map[string][]string)
 	for pkg, pkgDeps := range deps {
+		// Use map to deduplicate dependencies
+		uniqueDeps := make(map[string]bool)
 		for _, dep := range pkgDeps {
-			resolved[pkg] = append(resolved[pkg], provides[dep]...)
+			for _, realPkg := range provides[dep] {
+				uniqueDeps[realPkg] = true
+			}
+		}
+		// Convert map back to slice
+		for dep := range uniqueDeps {
+			resolved[pkg] = append(resolved[pkg], dep)
 		}
 	}
 	return resolved, scanner.Err()

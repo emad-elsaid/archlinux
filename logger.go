@@ -69,36 +69,57 @@ var (
 
 // prettyHandler implements a custom slog.Handler for formatted console output.
 type prettyHandler struct {
-	w     io.Writer
-	attrs []slog.Attr
+	w      io.Writer
+	attrs  []slog.Attr
+	groups []string
 }
 
 // newPrettyHandler creates a new pretty handler that writes to the given writer.
-func newPrettyHandler(w io.Writer) slog.Handler { return &prettyHandler{w: w} }
+func newPrettyHandler(w io.Writer) slog.Handler {
+	if w == nil {
+		panic("writer cannot be nil")
+	}
+	return &prettyHandler{w: w}
+}
 
 // Enabled returns true for all log levels.
 func (h *prettyHandler) Enabled(_ context.Context, level slog.Level) bool { return true }
 
-// WithGroup creates a new handler with the given group name (currently returns same handler).
-func (h *prettyHandler) WithGroup(string) slog.Handler { return &prettyHandler{w: h.w, attrs: h.attrs} }
+// WithGroup creates a new handler with the given group name.
+func (h *prettyHandler) WithGroup(name string) slog.Handler {
+	if name == "" {
+		return h
+	}
+	return &prettyHandler{w: h.w, attrs: h.attrs, groups: append(h.groups, name)}
+}
 
 // Handle formats and writes log records to the output writer.
 func (h *prettyHandler) Handle(_ context.Context, r slog.Record) error {
 	var buf strings.Builder
 	var detailedBuf strings.Builder
 
-	fmt.Fprintf(&buf, "%s %s", levelEmoji[r.Level], r.Message)
+	emoji, ok := levelEmoji[r.Level]
+	if !ok {
+		emoji = "❓"
+	}
+	fmt.Fprintf(&buf, "%s %s", emoji, r.Message)
 
 	processAttr := func(a slog.Attr) {
+		key := a.Key
+		if len(h.groups) > 0 {
+			key = strings.Join(h.groups, ".") + "." + key
+		}
+		
 		value := a.Value.Any()
 		if a.Key == "count" {
 			fmt.Fprintf(&buf, " (%v)", value)
 		} else if items, ok := value.([]string); ok && len(items) > 0 {
 			for _, item := range items {
-				fmt.Fprintf(&detailedBuf, "   • %s\n", item)
+				escaped := strings.ReplaceAll(item, "\n", "\\n")
+				fmt.Fprintf(&detailedBuf, "   • %s\n", escaped)
 			}
 		} else {
-			fmt.Fprintf(&buf, " [%s=%v]", a.Key, value)
+			fmt.Fprintf(&buf, " [%s=%v]", key, value)
 		}
 	}
 
@@ -119,5 +140,5 @@ func (h *prettyHandler) Handle(_ context.Context, r slog.Record) error {
 
 // WithAttrs returns a new handler with the given attributes prepended.
 func (h *prettyHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return &prettyHandler{w: h.w, attrs: append(h.attrs, attrs...)}
+	return &prettyHandler{w: h.w, attrs: append(h.attrs, attrs...), groups: h.groups}
 }

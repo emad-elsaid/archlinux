@@ -20,9 +20,12 @@ func newUserStow() userStow {
 }
 
 func (u userStow) getDirs() (dotfilesDir, stowDir, targetDir string, err error) {
-	dotfilesDir, err = os.Getwd()
-	if err != nil {
-		return "", "", "", err
+	dotfilesDir = os.Getenv("PWD")
+	if dotfilesDir == "" {
+		dotfilesDir, err = os.Getwd()
+		if err != nil {
+			return "", "", "", err
+		}
 	}
 
 	stowDir = filepath.Join(dotfilesDir, "user")
@@ -124,12 +127,12 @@ func (u userStow) handleConflicts(dotfilesDir, stowDir, targetDir string) error 
 }
 
 func (u userStow) parseApplyConflicts(output string) []string {
-	re := regexp.MustCompile(`cannot stow .+ over existing target (.+) since`)
+	re := regexp.MustCompile(`cannot stow (?s:.+) over existing target ((?s:.+)) since`)
 	return lo.Map(re.FindAllStringSubmatch(output, -1), func(m []string, _ int) string { return m[1] })
 }
 
 func (u userStow) parseConflicts(output string) []string {
-	re := regexp.MustCompile(`existing target is not owned by stow: (.+)`)
+	re := regexp.MustCompile(`existing target is not owned by stow: ((?s:.+))`)
 	return lo.Map(re.FindAllStringSubmatch(output, -1), func(m []string, _ int) string { return m[1] })
 }
 

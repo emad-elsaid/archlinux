@@ -26,15 +26,27 @@ func Main() {
 		usage()
 		os.Exit(1)
 	}
+
+	command := args[0]
+
+	// Check for help before dependency check to allow --help without dependencies
+	if command == "help" || command == "--help" || command == "-h" {
+		usage()
+		return
+	}
+
+	// Warn about extra arguments
+	if len(args) > 1 {
+		slog.Warn("Extra arguments ignored", "arguments", args[1:])
+	}
+
 	dotfilesDir, err := os.Getwd()
 	checkFatal(err, "Failed to get current working dir")
 	stowDir := filepath.Join(dotfilesDir, "user")
-	checkFatal(err, "Failed to get home directory")
 
 	// Check and install dependencies
 	checkFatal(checkDependencies(), "Dependency check failed")
 
-	command := args[0]
 	switch command {
 	case "apply":
 		cmdApply(stowDir)
@@ -42,8 +54,6 @@ func Main() {
 		cmdSave(stowDir)
 	case "diff":
 		cmdDiff()
-	case "help", "--help", "-h":
-		usage()
 	default:
 		slog.Error("Unknown command", "command", command)
 		fmt.Println()
@@ -132,7 +142,11 @@ func cmdDiff() {
 
 // cmdSave saves the current system state as declarative Go code.
 func cmdSave(stowDir string) {
-	requireDir(stowDir)
+	// Create stowDir if it doesn't exist
+	if err := os.MkdirAll(stowDir, 0755); err != nil {
+		checkFatal(err, "Failed to create stow directory")
+	}
+
 	executeCommandCallbacks(PhaseBeforeSave)
 
 	stow := newUserStow()

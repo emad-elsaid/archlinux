@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -73,7 +74,7 @@ func (u symlinks) filterBrokenSymlinks(stdin string) (stdout, stderr string, err
 		link = strings.TrimSpace(link)
 		// Skip ignored files
 		if lo.ContainsBy(ignoreFiles, func(ignore string) bool {
-			return strings.HasSuffix(link, "/"+ignore) || strings.HasSuffix(link, ignore)
+			return strings.HasSuffix(link, "/"+ignore) || filepath.Base(link) == ignore
 		}) {
 			continue
 		}

@@ -75,8 +75,21 @@ func (u userGroups) Install(grps []string) error {
 	if username == "" {
 		return fmt.Errorf("USER env var not set")
 	}
+	
+	// Validate username format (basic alphanumeric + underscore/dash)
+	if !isValidUsername(username) {
+		return fmt.Errorf("invalid username format: %q", username)
+	}
 
 	for _, grp := range grps {
+		// Validate group name before attempting install
+		if strings.TrimSpace(grp) == "" {
+			return fmt.Errorf("group name cannot be empty or whitespace")
+		}
+		if strings.ContainsAny(grp, " \t\n\r") {
+			return fmt.Errorf("group name cannot contain whitespace: %q", grp)
+		}
+		
 		slog.Info("Adding user to group", "group", grp, "user", username)
 		if err := types.Sudo("usermod", "-aG", grp, username).Interactive().Error(); err != nil {
 			return err
@@ -91,8 +104,21 @@ func (u userGroups) Uninstall(grps []string) error {
 	if username == "" {
 		return fmt.Errorf("USER env var not set")
 	}
+	
+	// Validate username format (basic alphanumeric + underscore/dash)
+	if !isValidUsername(username) {
+		return fmt.Errorf("invalid username format: %q", username)
+	}
 
 	for _, grp := range grps {
+		// Validate group name before attempting removal
+		if strings.TrimSpace(grp) == "" {
+			return fmt.Errorf("group name cannot be empty or whitespace")
+		}
+		if strings.ContainsAny(grp, " \t\n\r") {
+			return fmt.Errorf("group name cannot contain whitespace: %q", grp)
+		}
+		
 		slog.Info("Removing user from group", "group", grp, "user", username)
 		if err := types.Sudo("gpasswd", "-d", username, grp).Interactive().Error(); err != nil {
 			return err
@@ -100,6 +126,31 @@ func (u userGroups) Uninstall(grps []string) error {
 	}
 
 	return nil
+}
+
+// isValidUsername validates that a username follows standard Unix conventions
+func isValidUsername(username string) bool {
+	if username == "" {
+		return false
+	}
+	// Basic validation: alphanumeric, underscore, dash, optional $ at end
+	for i, c := range username {
+		if i == 0 {
+			// First char must be letter or underscore
+			if !((c >= 'a' && c <= 'z') || c == '_') {
+				return false
+			}
+		} else if i == len(username)-1 && c == '$' {
+			// Last char can be $
+			continue
+		} else {
+			// Middle chars: alphanumeric, underscore, dash
+			if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-') {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func (u userGroups) MarkExplicit([]string) error                   { return nil }

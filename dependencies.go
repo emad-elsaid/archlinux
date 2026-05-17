@@ -104,7 +104,16 @@ func checkDependencies() error {
 
 // isInstalled checks if a dependency is installed using its check command or "which".
 func isInstalled(dep dependency) bool {
+	// Validate dependency has a name
+	if dep.Name == "" {
+		return false
+	}
+
 	if len(dep.CheckCmd) > 0 {
+		// Validate CheckCmd has non-empty command
+		if dep.CheckCmd[0] == "" {
+			return false
+		}
 		return types.Cmd(dep.CheckCmd[0], dep.CheckCmd[1:]...).Error() == nil
 	}
 	return types.Cmd("which", dep.Name).Error() == nil
@@ -121,6 +130,9 @@ func depNames(deps []dependency) []string {
 
 // filterMissing returns the names of dependencies that are still missing.
 func filterMissing(deps []dependency) []string {
+	if deps == nil {
+		return []string{}
+	}
 	var missing []string
 	for _, dep := range deps {
 		if !isInstalled(dep) {
@@ -135,11 +147,17 @@ func installDependencies(deps []dependency) error {
 	var pacmanPkgs, aurPkgs []string
 
 	for _, dep := range deps {
+		pkg := dep.pkg()
+		// Validate package name is not empty
+		if pkg == "" {
+			return fmt.Errorf("dependency has empty package name: %+v", dep)
+		}
+
 		// Check if package exists in official repos
-		if types.Cmd("pacman", "-Si", dep.pkg()).Error() == nil {
-			pacmanPkgs = append(pacmanPkgs, dep.pkg())
+		if types.Cmd("pacman", "-Si", pkg).Error() == nil {
+			pacmanPkgs = append(pacmanPkgs, pkg)
 		} else {
-			aurPkgs = append(aurPkgs, dep.pkg())
+			aurPkgs = append(aurPkgs, pkg)
 		}
 	}
 

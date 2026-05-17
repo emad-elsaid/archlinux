@@ -28,6 +28,12 @@ var (
 //	fest.SystemFilesDir("system")  // Default
 //	fest.SystemFilesDir("custom-system-files")  // Additional directory
 func SystemFilesDir(dir string) {
+	// Deduplicate: only add if not already present
+	for _, existing := range systemFilesDirs {
+		if existing == dir {
+			return
+		}
+	}
 	systemFilesDirs = append(systemFilesDirs, dir)
 }
 
@@ -43,7 +49,8 @@ func readFileWithSudo(path string) ([]byte, error) {
 
 // listSystemDirFiles returns all files in the system files directories and their target paths
 func listSystemDirFiles() (map[string]string, error) {
-	files := make(map[string]string) // srcPath -> targetPath
+	files := make(map[string]string)         // srcPath -> targetPath
+	targetToSources := make(map[string][]string) // targetPath -> []srcPath (for collision detection)
 
 	for _, systemFilesDir := range systemFilesDirs {
 		if systemFilesDir == "" {
@@ -66,6 +73,10 @@ func listSystemDirFiles() (map[string]string, error) {
 
 			// Target path is / + relPath
 			targetPath := "/" + relPath
+			
+			// Track potential collision
+			targetToSources[targetPath] = append(targetToSources[targetPath], path)
+			
 			// Later directories override earlier ones if same target path
 			files[path] = targetPath
 			return nil
@@ -73,6 +84,14 @@ func listSystemDirFiles() (map[string]string, error) {
 
 		if err != nil {
 			return files, err
+		}
+	}
+
+	// Warn about collisions
+	for target, sources := range targetToSources {
+		if len(sources) > 1 {
+			slog.Warn("Multiple source files target same destination (last one wins)",
+				"target", target, "sources", sources)
 		}
 	}
 
